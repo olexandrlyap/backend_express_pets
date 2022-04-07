@@ -27,14 +27,14 @@ const showCurrentUser = async (req, res) => {
 }
 // update user with user.save()
 const updateUser = async (req, res) => {
-  const { email, name } = req.body
-  if (!email || !name) {
+  const { email, username } = req.body
+  if (!email || !username) {
     throw new CustomError.BadRequestError('Please provide all values')
   }
   const user = await User.findOne({ _id: req.user.userId })
 
   user.email = email
-  user.name = name
+  user.username = username
 
   await user.save()
 
@@ -69,13 +69,13 @@ module.exports = {
 
 // update user with findOneAndUpdate
 // const updateUser = async (req, res) => {
-//   const { email, name } = req.body
-//   if (!email || !name) {
+//   const { email, username } = req.body
+//   if (!email || !username) {
 //     throw new CustomError.BadRequestError('Please provide all values')
 //   }
 //   const user = await User.findOneAndUpdate(
 //     { _id: req.user.userId },
-//     { email, name },
+//     { email, username },
 //     { new: true, runValidators: true }
 //   )
 //   const tokenUser = createTokenUser(user)

@@ -26,6 +26,15 @@ const userRouter = require('./routes/userRoutes');
 const notFoundMiddleware = require('./middleware/not-found');
 const errorHandlerMiddleware = require('./middleware/error-handler');
 
+
+
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+
+
 app.set('trust proxy', 1);
 app.use(
   rateLimiter({
@@ -34,7 +43,7 @@ app.use(
   })
 );
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(xss());
 app.use(mongoSanitize());
 
@@ -43,7 +52,6 @@ app.use(cookieParser(process.env.JWT_SECRET));
 
 app.use(express.static('./public'));
 app.use(fileUpload());
-
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 

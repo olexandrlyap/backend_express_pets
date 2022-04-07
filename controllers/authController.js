@@ -12,11 +12,16 @@ const {
 const crypto = require('crypto')
 
 const register = async (req, res) => {
-  const { email, name, password } = req.body
+  const { email, username, password } = req.body
 
   const emailAlreadyExists = await User.findOne({ email })
   if (emailAlreadyExists) {
     throw new CustomError.BadRequestError('Email already exists')
+  }
+
+  const usernameAlreadyExists = await User.findOne({ username: username })
+  if(usernameAlreadyExists) {
+    throw new CustomError.BadRequestError('Username already exists')
   }
 
   // first registered user is an admin
@@ -26,7 +31,7 @@ const register = async (req, res) => {
   const verificationToken = crypto.randomBytes(40).toString('hex')
 
   const user = await User.create({
-    name,
+    username,
     email,
     password,
     role,
@@ -42,7 +47,7 @@ const register = async (req, res) => {
   // const forwardedProtocol = req.get('x-forwarded-proto')
 
   await sendVerificationEmail({
-    name: user.name,
+    username: user.username,
     email: user.email,
     verificationToken: user.verificationToken,
     origin,
@@ -148,7 +153,7 @@ const forgotPassword = async (req, res) => {
     // send email
     const origin = 'http://localhost:3000'
     await sendResetPasswordEmail({
-      name: user.name,
+      username: user.username,
       email: user.email,
       token: passwordToken,
       origin,
@@ -191,6 +196,32 @@ const resetPassword = async (req, res) => {
   res.send('reset password')
 }
 
+const doesUsernameExists = async (req, res) => {
+  const { username } = req.body
+
+  const user = await User.findOne({username: username})
+
+  if(!user) {
+   return res.status(StatusCodes.OK).json({user: false})
+  }
+
+  res.status(StatusCodes.OK).json({user: true})
+
+}
+
+const doesEmailExists = async (req, res) => {
+  const { email } = req.body
+
+  const user = await User.findOne({email: email})
+
+  if(!user) {
+   return res.status(StatusCodes.OK).json({user: false})
+  }
+
+  res.status(StatusCodes.OK).json({user: true})
+
+}
+
 module.exports = {
   register,
   login,
@@ -198,4 +229,6 @@ module.exports = {
   verifyEmail,
   forgotPassword,
   resetPassword,
+  doesUsernameExists,
+  doesEmailExists,
 }

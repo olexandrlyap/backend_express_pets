@@ -3,11 +3,14 @@ const validator = require('validator')
 const bcrypt = require('bcryptjs')
 
 const UserSchema = new mongoose.Schema({
-  name: {
+  username: {
     type: String,
+    unique: true,
     required: [true, 'Please provide name'],
-    minlength: 3,
-    maxlength: 50,
+    trim: true,
+    lowercase: true,
+    minLength: 3,
+    maxLength: 50,
   },
   email: {
     type: String,
@@ -43,6 +46,9 @@ const UserSchema = new mongoose.Schema({
 })
 
 UserSchema.pre('save', async function () {
+  if(this.isModified('username')) {
+    this.username = this.username.replace(/\s+/g, '')
+  }
   // console.log(this.modifiedPaths())
   // console.log(this.isModified('name'))
   if (!this.isModified('password')) return

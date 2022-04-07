@@ -11,6 +11,7 @@ const authenticateUser = async (req, res, next) => {
       req.user = payload.user
       return next()
     }
+
     const payload = isTokenValid(refreshToken)
 
     const existingToken = await Token.findOne({
