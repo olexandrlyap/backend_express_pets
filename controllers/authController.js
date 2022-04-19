@@ -10,6 +10,7 @@ const {
   createHash,
 } = require('../utils')
 const crypto = require('crypto')
+const { STATUS_CODES } = require('http')
 
 const register = async (req, res) => {
   const { email, username, password } = req.body
@@ -189,10 +190,12 @@ const resetPassword = async (req, res) => {
       user.password = password
       user.passwordToken = null
       user.passwordTokenExpirationDate = null
+
+      console.log('user if', user)
       await user.save()
     }
   }
-
+  console.log('user out', user)
   res.send('reset password')
 }
 
@@ -221,6 +224,7 @@ const doesEmailExists = async (req, res) => {
   res.status(StatusCodes.OK).json({user: true})
 
 }
+
 
 module.exports = {
   register,

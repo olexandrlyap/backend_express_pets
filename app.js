@@ -20,6 +20,7 @@ const connectDB = require('./db/connect');
 //  routers
 const authRouter = require('./routes/authRoutes');
 const userRouter = require('./routes/userRoutes');
+const petRouter = require('./routes/petRoutes')
 
 
 // middleware
@@ -54,6 +55,7 @@ app.use(express.static('./public'));
 app.use(fileUpload());
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/pets', petRouter)
 
 
 app.use(notFoundMiddleware);

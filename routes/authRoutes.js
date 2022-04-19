@@ -11,7 +11,7 @@ const {
   forgotPassword,
   resetPassword,
   doesUsernameExists,
-  doesEmailExists
+  doesEmailExists,
 } = require('../controllers/authController')
 
 router.post('/register', register)
