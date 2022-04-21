@@ -21,6 +21,7 @@ router
 router
     .route('/:slug')
     .get(getSinglePet)
+    .patch([authenticateUser], updatePet)
 //other routes add authorize permission - add policy...
 
 module.exports = router

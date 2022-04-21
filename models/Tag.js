@@ -14,16 +14,12 @@ const tagSchema = new Schema({
         trim: true,
         lowercase: true,
         unique: true
-        // OR try enums
-     /*    enum: {
-            values: ['pp', 'očkovaný', 'perfektní', 'jídlo s sebou'],
-            message:'{value is not supported}'
-        }, */
     },
     slug: {
         type: String,
         slug: ["name"],
         unique: true,
+        index: true,
         slug_padding_size: 2
     },
     pets:[{
@@ -32,4 +28,4 @@ const tagSchema = new Schema({
     }]
 })
 
-module.exports = mongoose.Model('Tag', tagSchema)
+module.exports = mongoose.model('Tag', tagSchema)
