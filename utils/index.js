@@ -4,6 +4,7 @@ const checkPermissions = require('./checkPermissions')
 const sendVerificationEmail = require('./sendVerficationEmail')
 const sendResetPasswordEmail = require('./sendResetPasswordEmail')
 const createHash = require('./createHash')
+const checkAllowedBreeds = require('./checkAllowedBreeds')
 
 module.exports = {
   createJWT,
@@ -14,4 +15,5 @@ module.exports = {
   sendVerificationEmail,
   sendResetPasswordEmail,
   createHash,
+  checkAllowedBreeds
 }

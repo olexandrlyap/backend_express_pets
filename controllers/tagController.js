@@ -1,5 +1,6 @@
 const { StatusCodes } = require('http-status-codes')
 const CustomError = require('../errors')
+const Pet = require('../models/Pet')
 const Tag = require('../models/Tag')
 
 
@@ -36,9 +37,7 @@ const getSingleTag = async (req, res) => {
 }
 
 const updateTag = async (req, res) => {
-
-    res.send('update')
-    const { slug, tagID } = req.body
+    const { slug } = req.params
  
     const tag = await Tag.findOne({ slug })
 
@@ -51,16 +50,24 @@ const updateTag = async (req, res) => {
 
 const deleteTag = async (req, res) => {
 
-    res.send('delete')
-    const { slug, tagID } = req.body
- 
+    const { slug } = req.params
+
     const tag = await Tag.findOne({ slug })
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
     }
 
-    res.status(StatusCodes.OK).json({tag})
+    // delete tag from pet
+    const deleteTagFromPet = await Pet.updateMany({ tags: tag._id }, {
+        $pull: { 
+            tags: tag._id
+        }
+    })
+
+    await tag.deleteOne()
+
+    res.status(StatusCodes.OK).json({tag, deleteTagFromPet})
 }
 
 
