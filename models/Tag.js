@@ -24,7 +24,7 @@ const tagSchema = new Schema({
     },
     pets:[{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Pet'
+        ref: 'Pet',
     }]
 })
 

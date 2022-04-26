@@ -4,9 +4,12 @@ const Pet = require('../models/Pet')
 const Tag = require('../models/Tag')
 
 
+// TODO
+// ADD PET only ONCE to Tag
+
 const getAllTags = async (req, res) => {
     const tags = await Tag.find({}).populate('pets')
-    res.status(StatusCodes.OK).json({tags})
+    res.status(StatusCodes.OK).json({ tags })
 }
 
 const createTag = async (req, res) => {
@@ -27,7 +30,7 @@ const createTag = async (req, res) => {
 const getSingleTag = async (req, res) => {
     const { slug } = req.params
 
-    const tag = await Tag.findOne({ slug })
+    const tag = await Tag.findOne({ slug }).populate('pets')
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')

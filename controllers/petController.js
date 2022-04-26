@@ -7,6 +7,16 @@ const { checkAllowedBreeds } = require('../utils')
 const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
 
 
+// TODO
+// ADD tag only ONCE to Pet
+
+
+// UPLOAD IMAGES
+
+
+
+// METHODS FOR ROUTES
+
 const getAllPets = async (req, res) => {
     // filter
     const pets = await Pet.find({}).populate('tags')

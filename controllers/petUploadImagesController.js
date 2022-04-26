@@ -1,9 +1,6 @@
-const express = require('express')
-const router = express.Router()
 const multer  = require('multer')
-const CustomError = require('../errors')
-const { imageConfig } = require('../controllers/petUploadImagesController')
-/* const fileStorageEngine = multer.diskStorage({
+
+const fileStorageEngine = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'public/uploads' )
     },
@@ -33,30 +30,8 @@ const upload = multer({
 const imageConfig = upload.fields(([
    { name: 'main_image', maxCount: 1 },
    { name: 'images', maxCount: 5 }
-])) */
+]))
 
-const {
-    authenticateUser,
-    authorizePermissions,
-  } = require('../middleware/authentication');
-
-const {
-    getAllPets,
-    createPet,
-    getSinglePet,
-    updatePet,
-    deletePet
-} = require('../controllers/petController')
-
-router
-    .route('/')
-    .get(getAllPets)
-    .post([authenticateUser, imageConfig], createPet)
-
-router
-    .route('/:slug')
-    .get(getSinglePet)
-    .patch([authenticateUser], updatePet)
-//other routes add authorize permission - add policy...
-
-module.exports = router
+module.exports = {
+    imageConfig
+}
