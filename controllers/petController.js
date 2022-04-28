@@ -22,6 +22,12 @@ const getAllPets = async (req, res) => {
     res.status(StatusCodes.OK).json({pets})
 }
 
+const getRecommendedPets = async (req, res) => {
+    // for Main page and advertisments 
+    const pets = await Pet.find({}).populate('tags').select('-images').limit(5)
+    res.status(StatusCodes.OK).json({pets})
+}
+
 const createPet = async (req, res) => {
     const { type, breed, contract, name, description, age, price, fees, tags} = req.body
     const userID = req.user.userId
@@ -213,7 +219,8 @@ module.exports = {
     createPet,
     getSinglePet,
     updatePet,
-    deletePet
+    deletePet,
+    getRecommendedPets,
 }
 
 
