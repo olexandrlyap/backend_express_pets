@@ -17,19 +17,20 @@ const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
 
 
 const getAllPets = async (req, res) => {
-    // filter
-    const pets = await Pet.find({}).populate('tags').select('-images')
+    // add filter, sorting 
+    const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
+    const pets = await Pet.find({}).populate(populateWithData)
     res.status(StatusCodes.OK).json({pets})
 }
 
 const getRecommendedPets = async (req, res) => {
     // for Main page and advertisments 
-    const pets = await Pet.find({}).populate('tags').select('-images').limit(5)
+    const pets = await Pet.find({}).populate([{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]).limit(5)
     res.status(StatusCodes.OK).json({pets})
 }
 
 const createPet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags} = req.body
+    const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes} = req.body
     const userID = req.user.userId
     const { mainImage, images } = req.files
 
@@ -102,7 +103,9 @@ const createPet = async (req, res) => {
         age,
         price,
         fees,
-        main_image: mainImage.secure_url,
+        now_available,
+        notes,
+        main_image: uploadedMainImage.secure_url,
         images: uploadedImages,
         user: ObjectId(userID)
     })
@@ -119,17 +122,22 @@ const createPet = async (req, res) => {
         { $push: { pets: petWithTags._id }}
     )
 
-
     res.status(StatusCodes.CREATED).json({ pet:petWithTags })
 }
 
 
 const getSinglePet = async (req, res) => {
     const { slug } = req.params
-    const pet = await Pet.findOne({ slug }).populate({
-        path: 'tags',
-        select: 'name slug _id'
-    })
+    const pet = await Pet.findOne({ slug }).populate([ 
+        {
+            path: 'tags',
+            select: 'name slug _id'
+        },
+        {
+            path: 'user',
+            select: '_id username'
+        }
+    ])
     if (!pet) {
         throw new CustomError.NotFoundError('Pet doesnt exist')
     }
@@ -138,10 +146,9 @@ const getSinglePet = async (req, res) => {
 }
 
 const updatePet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags} = req.body
+    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available} = req.body
     const { slug } = req.params
     const userID = req.user.userId
-
 
     const pet = await Pet.findOne({ slug, user: userID }).populate({
         path: 'tags',
@@ -154,7 +161,6 @@ const updatePet = async (req, res) => {
 
     // HANDLE IMAGES HERE.
     // WHAT LOGIC TO IMPLEMENT. SHOULD A USE UPLOAD EACH IMAGE IN UPDATE AGAIN? HOW TO PERSIST IMAGES. 
-
 
     // refactor this:
     if(breed) {
@@ -183,6 +189,13 @@ const updatePet = async (req, res) => {
     if(fees) {
         pet.fees = fees
     }
+    if(notes) {
+        pet.notes = notes
+    }
+    if(typeof now_available == "boolean") {
+        pet.now_available = now_available
+    }
+
 
     // handle tags relationship
     const oldTags = pet.tags
@@ -210,7 +223,28 @@ const updatePet = async (req, res) => {
 }
 
 const deletePet = async (req, res) => {
-    res.send('delete pet')
+    const { slug } = req.params
+    const userID = req.user.userId
+
+    const pet = await Pet.findOne({ slug, user: userID }).populate({
+        path: 'tags',
+        select: 'name slug _id'
+    })
+
+    if (!pet) {
+        throw new CustomError.UnauthorizedError('You have no permission')
+    }
+
+    const removePetFromTags = await Tag.updateMany({ pets: {
+        _id: pet._id
+    }}, {
+        $pull: { pets: pet._id }
+    })
+
+    await pet.deleteOne()
+
+    res.status(StatusCodes.OK).json({pet})
+
 }
 
 

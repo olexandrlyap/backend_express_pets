@@ -13,7 +13,8 @@ const {
     createPet,
     getSinglePet,
     updatePet,
-    deletePet
+    deletePet,
+    getRecommendedPets
 } = require('../controllers/petController')
 
 router
@@ -25,6 +26,11 @@ router
     .route('/:slug')
     .get(getSinglePet)
     .patch([authenticateUser], updatePet)
+    .delete([authenticateUser], deletePet)
 //other routes add authorize permission - add policy...
+
+router
+    .route('/recommended/main')
+    .get(getRecommendedPets)
 
 module.exports = router

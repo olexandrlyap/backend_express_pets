@@ -26,7 +26,7 @@ const petSchema = new Schema({
     contract: {
         type: String,
         required: [true, 'contract must be provided'],
-        enum: ['koupě', 'adopce', 'darování'],
+        enum: ['koupě', 'útulek', 'darování', 'krytí'],
         default: 'koupě'
     },
     name: {
@@ -43,6 +43,16 @@ const petSchema = new Schema({
         maxLength: 500,
         trim: true,
     },
+    now_available: {
+        type: Boolean,
+        default: false
+    },
+    notes: {
+        type: String,
+        minlength: 3,
+        maxlength: 30,
+        trim: true
+    },
     age: {
         type: String,
         required: [true, 'age must be provided'],
@@ -50,7 +60,7 @@ const petSchema = new Schema({
     },
     main_image: {
         type: String,
-        required: [false, 'image must be provided'],
+        required: [true, 'image must be provided'],
     },
     images: [String],
     price: {
