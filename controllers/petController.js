@@ -29,6 +29,18 @@ const getRecommendedPets = async (req, res) => {
     res.status(StatusCodes.OK).json({pets})
 }
 
+const removeDuplicateTags = (tags) => {
+    const addedTags = new Set();
+    const dedupedTags = [];
+    for (const tag of tags) {
+        if (!addedTags.has(tag.toString())) {
+            dedupedTags.push(tag);
+            addedTags.add(tag.toString());
+        }
+    }
+    return dedupedTags;
+}
+
 const createPet = async (req, res) => {
     const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes} = req.body
     const userID = req.user.userId
@@ -53,13 +65,13 @@ const createPet = async (req, res) => {
     // - DELETE FILES FROM SERVER AND CLOUDINARY(when not used)
     // - add IMAGES LATER AFTER THE MODEL IS CREATED? Due to validation of other fields.
 
-    const uploadedMainImage = await cloudinary.uploader.upload(
-        mainImage[0].path, 
-        {
-            use_filename: true,
-            folder: 'pets'
-        }
-    )
+    // const uploadedMainImage = await cloudinary.uploader.upload(
+    //     mainImage[0].path, 
+    //     {
+    //         use_filename: true,
+    //         folder: 'pets'
+    //     }
+    // )
     
     // validate images total size
     if(images) {
@@ -77,14 +89,14 @@ const createPet = async (req, res) => {
     // upload images to cloudinary and return links 
     const uploadImages = async () => {
         const images = imagesLocalPaths.map( async (path) => {
-            const image = await cloudinary.uploader.upload(
-                             path, 
-                             {
-                                 use_filename: true,
-                                 folder: 'pets'
-                             }
-            )
-            return image.secure_url
+            // const image = await cloudinary.uploader.upload(
+            //                  path, 
+            //                  {
+            //                      use_filename: true,
+            //                      folder: 'pets'
+            //                  }
+            // )
+            return 'image.secure_url'
         })
         
         const result = await Promise.all(images)
@@ -105,7 +117,7 @@ const createPet = async (req, res) => {
         fees,
         now_available,
         notes,
-        main_image: uploadedMainImage.secure_url,
+        main_image: 'uploadedMainImage.secure_url',
         images: uploadedImages,
         user: ObjectId(userID)
     })
@@ -113,14 +125,8 @@ const createPet = async (req, res) => {
     // Add tags to the Pet and limit max 5
     const limitedTags = tags ? tags.slice(0, 5) : null
     const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
-        $push: { tags: limitedTags }
+        $push: { tags: removeDuplicateTags(limitedTags) }
     }, { new: true })
-
-    // add Pet to Tags
-    const petTags = await Tag.updateMany(
-        { _id:  limitedTags   },
-        { $push: { pets: petWithTags._id }}
-    )
 
     res.status(StatusCodes.CREATED).json({ pet:petWithTags })
 }
@@ -198,27 +204,12 @@ const updatePet = async (req, res) => {
 
 
     // handle tags relationship
-    const oldTags = pet.tags
     const limitedTags = tags ? tags.slice(0, 5) : null
-    pet.tags = limitedTags
+    pet.tags = removeDuplicateTags(limitedTags)
 
     await pet.save()
 
-    // remove pet from old tags
-    const removePetFromOldTags = await Tag.updateMany({ pets: {
-        _id: pet._id
-    }}, {
-        $pull: { pets: pet._id }
-    })
-
-    // add pet to new tags
-    const addPetToNewTags = await Tag.updateMany({ _id: limitedTags },
-        {
-            $push: { pets: pet._id }
-        }
-    )
-
-    res.status(StatusCodes.OK).json({ removePetFromOldTags, addPetToNewTags })
+    res.status(StatusCodes.OK).json({})
 
 }
 
@@ -234,12 +225,6 @@ const deletePet = async (req, res) => {
     if (!pet) {
         throw new CustomError.UnauthorizedError('You have no permission')
     }
-
-    const removePetFromTags = await Tag.updateMany({ pets: {
-        _id: pet._id
-    }}, {
-        $pull: { pets: pet._id }
-    })
 
     await pet.deleteOne()
 

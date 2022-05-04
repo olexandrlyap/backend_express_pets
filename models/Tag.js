@@ -22,10 +22,6 @@ const tagSchema = new Schema({
         index: true,
         slug_padding_size: 2
     },
-    pets:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Pet',
-    }]
 })
 
 module.exports = mongoose.model('Tag', tagSchema)
