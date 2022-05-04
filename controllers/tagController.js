@@ -3,12 +3,28 @@ const CustomError = require('../errors')
 const Pet = require('../models/Pet')
 const Tag = require('../models/Tag')
 
-
-// TODO
-// ADD PET only ONCE to Tag
+const populatePets = async (tags) => {
+    const tagIDs = []; // IDs for the query
+    const tagIndexesByID = {}; // a way for us to quickly find a tag in the array by ID without looping
+    for (let i = 0; i < tags.length; i++) {
+        const { _id } = tags[i];
+        tagIDs.push(_id);
+        tagIndexesByID[_id] = tagIDs.length - 1;
+        tags[i].pets = [];
+    }
+    const pets = await Pet.find({ tags: { $in: tagIDs } });
+    for (const pet of pets) {
+        for (const tagID of pet.tags) {
+            if (typeof tagIndexesByID[tagID] === 'number') {
+                tags[tagIndexesByID[tagID]].pets.push(pet._id);
+            }
+        }
+    }
+}
 
 const getAllTags = async (req, res) => {
-    const tags = await Tag.find({}).populate('pets')
+    const tags = await Tag.find({})
+    populatePets(tags);
     res.status(StatusCodes.OK).json({ tags })
 }
 
@@ -30,7 +46,8 @@ const createTag = async (req, res) => {
 const getSingleTag = async (req, res) => {
     const { slug } = req.params
 
-    const tag = await Tag.findOne({ slug }).populate('pets')
+    const tag = await Tag.findOne({ slug })
+    populatePets([tag]);
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')

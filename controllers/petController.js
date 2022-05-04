@@ -116,12 +116,6 @@ const createPet = async (req, res) => {
         $push: { tags: limitedTags }
     }, { new: true })
 
-    // add Pet to Tags
-    const petTags = await Tag.updateMany(
-        { _id:  limitedTags   },
-        { $push: { pets: petWithTags._id }}
-    )
-
     res.status(StatusCodes.CREATED).json({ pet:petWithTags })
 }
 
@@ -198,27 +192,12 @@ const updatePet = async (req, res) => {
 
 
     // handle tags relationship
-    const oldTags = pet.tags
     const limitedTags = tags ? tags.slice(0, 5) : null
     pet.tags = limitedTags
 
     await pet.save()
 
-    // remove pet from old tags
-    const removePetFromOldTags = await Tag.updateMany({ pets: {
-        _id: pet._id
-    }}, {
-        $pull: { pets: pet._id }
-    })
-
-    // add pet to new tags
-    const addPetToNewTags = await Tag.updateMany({ _id: limitedTags },
-        {
-            $push: { pets: pet._id }
-        }
-    )
-
-    res.status(StatusCodes.OK).json({ removePetFromOldTags, addPetToNewTags })
+    res.status(StatusCodes.OK).json({})
 
 }
 
@@ -234,12 +213,6 @@ const deletePet = async (req, res) => {
     if (!pet) {
         throw new CustomError.UnauthorizedError('You have no permission')
     }
-
-    const removePetFromTags = await Tag.updateMany({ pets: {
-        _id: pet._id
-    }}, {
-        $pull: { pets: pet._id }
-    })
 
     await pet.deleteOne()
 
