@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-const validator = require('validator')
 const slug = require('mongoose-slug-generator')
 
 mongoose.plugin(slug)

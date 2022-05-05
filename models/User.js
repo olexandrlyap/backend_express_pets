@@ -43,6 +43,11 @@ const UserSchema = new mongoose.Schema({
   passwordTokenExpirationDate: {
     type: Date,
   },
+  profile: {
+    type: mongoose.Types.ObjectId,
+    ref: 'Profile',
+    default: {},
+  }
 })
 
 UserSchema.pre('save', async function () {

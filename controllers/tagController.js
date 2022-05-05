@@ -24,7 +24,7 @@ const populatePets = async (tags) => {
 
 const getAllTags = async (req, res) => {
     const tags = await Tag.find({})
-    populatePets(tags);
+    await populatePets(tags);
     res.status(StatusCodes.OK).json({ tags })
 }
 
