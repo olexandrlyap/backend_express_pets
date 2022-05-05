@@ -99,8 +99,10 @@ const createPet = async (req, res) => {
         return result
     }
 
-   const uploadedImages = await uploadImages()
+    const uploadedImages = await uploadImages()
 
+
+    const limitedTags = tags ? removeDuplicateTags(tags.split(',').slice(0, 5)) : []
     // Create a Pet instance 
     const pet = await Pet.create({
         type,
@@ -115,16 +117,11 @@ const createPet = async (req, res) => {
         notes,
         main_image: 'uploadedMainImage.secure_url',
         images: uploadedImages,
-        user: ObjectId(userID)
+        user: ObjectId(userID),
+        tags: limitedTags,
     })
 
-    // Add tags to the Pet and limit max 5
-    const limitedTags = tags ? tags.split(',').slice(0, 5) : []
-    const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
-        $push: { tags: removeDuplicateTags(limitedTags) }
-    }, { new: true })
-
-    res.status(StatusCodes.CREATED).json({ pet:petWithTags })
+    res.status(StatusCodes.CREATED).json({ pet })
 }
 
 
