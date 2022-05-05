@@ -119,7 +119,7 @@ const createPet = async (req, res) => {
     })
 
     // Add tags to the Pet and limit max 5
-    const limitedTags = tags ? tags.slice(0, 5) : null
+    const limitedTags = tags ? tags.split(',').slice(0, 5) : []
     const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
         $push: { tags: removeDuplicateTags(limitedTags) }
     }, { new: true })
