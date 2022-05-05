@@ -152,14 +152,33 @@ const getSinglePet = async (req, res) => {
 }
 
 const updatePet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available} = req.body
+    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available } = req.body
     const { slug } = req.params
     const userID = req.user.userId
 
-    const pet = await Pet.findOne({ slug, user: userID }).populate({
-        path: 'tags',
-        select: 'name slug _id'
-    })
+    if (breed) {
+        checkAllowedBreeds({ type, breed, catBreeds, dogBreeds, otherBreeds });
+    }
+
+    const pet = await Pet.findOneAndUpdate({ slug, user: userID }, {
+        type,
+        breed,
+        contract,
+        name,
+        description,
+        age,
+        price,
+        fees,
+        notes,
+        now_available,
+        tags: tags && removeDuplicateTags(tags.slice(0, 5)),
+    }, {
+        new: true,
+        populate: {
+            path: 'tags',
+            select: 'name slug _id'
+        },
+    });
 
     if (!pet) {
         throw new CustomError.UnauthorizedError('You have no permission')
@@ -167,47 +186,6 @@ const updatePet = async (req, res) => {
 
     // HANDLE IMAGES HERE.
     // WHAT LOGIC TO IMPLEMENT. SHOULD A USE UPLOAD EACH IMAGE IN UPDATE AGAIN? HOW TO PERSIST IMAGES. 
-
-    // refactor this:
-    if(breed) {
-         // check if breed is allowed
-        checkAllowedBreeds({type, breed, catBreeds, dogBreeds, otherBreeds})
-        pet.breed = breed
-    }
-    if(type) {
-        pet.type = type
-    }
-    if(contract) {
-        pet.contract = contract
-    }
-    if(name) {
-        pet.name = name 
-    }
-    if(description) {
-        pet.description = description
-    }
-    if(age) {
-        pet.age = age
-    }
-    if(price) {
-        pet.price = price
-    }
-    if(fees) {
-        pet.fees = fees
-    }
-    if(notes) {
-        pet.notes = notes
-    }
-    if(typeof now_available == "boolean") {
-        pet.now_available = now_available
-    }
-
-
-    // handle tags relationship
-    const limitedTags = tags ? tags.slice(0, 5) : null
-    pet.tags = removeDuplicateTags(limitedTags)
-
-    await pet.save()
 
     res.status(StatusCodes.OK).json({})
 
@@ -241,19 +219,3 @@ module.exports = {
     deletePet,
     getRecommendedPets,
 }
-
-
-    // REFACTOR UPDATE BY IF() IN COMMENTED FASHION
-/* 
-    const updateFunction = async (model, attributes) => {
-        for (let i = 0; i < attributes.length; i++) {
-            for (const [key, value] of Object.entries(attributes[i])) {
-                if(key && value) {
-                  model.key = value
-                  return model
-                }
-            }
-        }
-    } */
-  /*   const petAttributes = [{ type }, { breed }, { contract }, { name }, { description }, { age }, { price }, { fees }]
-    await updateFunction(pet,  petAttributes) */
