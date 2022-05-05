@@ -65,13 +65,13 @@ const createPet = async (req, res) => {
     // - DELETE FILES FROM SERVER AND CLOUDINARY(when not used)
     // - add IMAGES LATER AFTER THE MODEL IS CREATED? Due to validation of other fields.
 
-    // const uploadedMainImage = await cloudinary.uploader.upload(
-    //     mainImage[0].path, 
-    //     {
-    //         use_filename: true,
-    //         folder: 'pets'
-    //     }
-    // )
+    const uploadedMainImage = await cloudinary.uploader.upload(
+        mainImage[0].path, 
+        {
+            use_filename: true,
+            folder: 'pets'
+        }
+    )
     
     // validate images total size
     if(images) {
@@ -89,14 +89,18 @@ const createPet = async (req, res) => {
     // upload images to cloudinary and return links 
     const uploadImages = async () => {
         const images = imagesLocalPaths.map( async (path) => {
-            // const image = await cloudinary.uploader.upload(
-            //                  path, 
-            //                  {
-            //                      use_filename: true,
-            //                      folder: 'pets'
-            //                  }
-            // )
-            return 'image.secure_url'
+            const image = await cloudinary.uploader.upload(
+                path, 
+                {
+                    use_filename: true,
+                    folder: 'pets'
+                }
+            )
+
+            return {
+                id: image.public_id,
+                url: image.secure_url,
+            }
         })
         
         const result = await Promise.all(images)
@@ -117,7 +121,10 @@ const createPet = async (req, res) => {
         fees,
         now_available,
         notes,
-        main_image: 'uploadedMainImage.secure_url',
+        main_image: {
+            id: uploadedMainImage.public_id,
+            url: uploadedMainImage.url,
+        },
         images: uploadedImages,
         user: ObjectId(userID)
     })
