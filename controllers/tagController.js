@@ -24,7 +24,7 @@ const populatePets = async (tags) => {
 
 const getAllTags = async (req, res) => {
     const tags = await Tag.find({})
-    populatePets(tags);
+    await populatePets(tags);
     res.status(StatusCodes.OK).json({ tags })
 }
 
@@ -47,7 +47,7 @@ const getSingleTag = async (req, res) => {
     const { slug } = req.params
 
     const tag = await Tag.findOne({ slug })
-    populatePets([tag]);
+    await populatePets([tag]);
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
