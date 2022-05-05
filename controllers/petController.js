@@ -149,14 +149,14 @@ const getSinglePet = async (req, res) => {
 
 const updatePet = async (req, res) => {
     const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available } = req.body
-    const { slug } = req.params
+    const { id } = req.params
     const userID = req.user.userId
 
     if (breed) {
         checkAllowedBreeds({ type, breed, catBreeds, dogBreeds, otherBreeds });
     }
 
-    const pet = await Pet.findOneAndUpdate({ slug, user: userID }, {
+    const pet = await Pet.findOneAndUpdate({ _id: id, user: userID }, {
         type,
         breed,
         contract,
@@ -188,10 +188,10 @@ const updatePet = async (req, res) => {
 }
 
 const deletePet = async (req, res) => {
-    const { slug } = req.params
+    const { id } = req.params
     const userID = req.user.userId
 
-    const pet = await Pet.findOne({ slug, user: userID }).populate({
+    const pet = await Pet.findOne({ _id: id, user: userID }).populate({
         path: 'tags',
         select: 'name slug _id'
     })
