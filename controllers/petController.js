@@ -9,11 +9,7 @@ const { checkAllowedBreeds } = require('../utils')
 const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
 
 
-// TODO
-
-// ADD Tag only ONCE to Pet ???? Pre save hook?
-// ADD Tag can have Pet once ???? Pre save hook?
-// DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
+// TODO: DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
 
 
 const getAllPets = async (req, res) => {
