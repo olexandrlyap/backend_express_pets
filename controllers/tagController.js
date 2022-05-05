@@ -9,7 +9,7 @@ const populatePets = async (tags) => {
     for (let i = 0; i < tags.length; i++) {
         const { _id } = tags[i];
         tagIDs.push(_id);
-        tagIndexesByID[_id] = tagIDs.length - 1;
+        tagIndexesByID[_id] = i;
         tags[i].pets = [];
     }
     const pets = await Pet.find({ tags: { $in: tagIDs } });
