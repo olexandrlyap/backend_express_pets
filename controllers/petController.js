@@ -9,11 +9,7 @@ const { checkAllowedBreeds } = require('../utils')
 const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
 
 
-// TODO
-
-// ADD Tag only ONCE to Pet ???? Pre save hook?
-// ADD Tag can have Pet once ???? Pre save hook?
-// DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
+// TODO: DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
 
 
 const getAllPets = async (req, res) => {
@@ -71,8 +67,16 @@ const createPet = async (req, res) => {
     // - add IMAGES LATER AFTER THE MODEL IS CREATED? Due to validation of other fields.
 
     const uploadedMainImage = await cloudinary.uploader.upload(
+image-upload-enhancements
         bufferToDataURL(mainImage[0].buffer, mainImage[0].mimetype),
         { folder: 'pets' }
+=======
+        mainImage[0].path, 
+        {
+            use_filename: true,
+            folder: 'pets'
+        }
+ main
     )
     
     // validate images total size
@@ -87,6 +91,7 @@ const createPet = async (req, res) => {
 
     // upload images to cloudinary and return links 
     const uploadImages = async () => {
+image-upload-enhancements
         const promises = images.map( async ({ buffer, mimetype }) => {
             const image = await cloudinary.uploader.upload(
                 bufferToDataURL(buffer, mimetype), 
@@ -97,14 +102,27 @@ const createPet = async (req, res) => {
                 id: image.public_id,
                 url: image.secure_url,
             }
+=======
+        const images = imagesLocalPaths.map( async (path) => {
+            const image = await cloudinary.uploader.upload(
+                             path, 
+                             {
+                                 use_filename: true,
+                                 folder: 'pets'
+                             }
+            )
+            return image.secure_url
+main
         })
         
         const result = await Promise.all(promises)
         return result
     }
 
-   const uploadedImages = await uploadImages()
+    const uploadedImages = await uploadImages()
 
+
+    const limitedTags = tags ? removeDuplicateTags(tags.split(',').slice(0, 5)) : []
     // Create a Pet instance 
     const pet = await Pet.create({
         type,
@@ -117,20 +135,28 @@ const createPet = async (req, res) => {
         fees,
         now_available,
         notes,
+image-upload-enhancements
         main_image: {
             id: uploadedMainImage.public_id,
             url: uploadedMainImage.url,
         },
+=======
+        main_image: uploadedMainImage.secure_url,
+ main
         images: uploadedImages,
-        user: ObjectId(userID)
+        user: ObjectId(userID),
+        tags: limitedTags,
     })
 
+ image-upload-enhancements
     // Add tags to the Pet and limit max 5
     // const limitedTags = tags ? tags.slice(0, 5) : null
     // const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
     //     $push: { tags: removeDuplicateTags(limitedTags) }
     // }, { new: true })
 
+=======
+ main
     res.status(StatusCodes.CREATED).json({ pet })
 }
 
@@ -155,14 +181,33 @@ const getSinglePet = async (req, res) => {
 }
 
 const updatePet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available} = req.body
-    const { slug } = req.params
+    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available } = req.body
+    const { id } = req.params
     const userID = req.user.userId
 
-    const pet = await Pet.findOne({ slug, user: userID }).populate({
-        path: 'tags',
-        select: 'name slug _id'
-    })
+    if (breed) {
+        checkAllowedBreeds({ type, breed, catBreeds, dogBreeds, otherBreeds });
+    }
+
+    const pet = await Pet.findOneAndUpdate({ _id: id, user: userID }, {
+        type,
+        breed,
+        contract,
+        name,
+        description,
+        age,
+        price,
+        fees,
+        notes,
+        now_available,
+        tags: tags && removeDuplicateTags(tags.slice(0, 5)),
+    }, {
+        new: true,
+        populate: {
+            path: 'tags',
+            select: 'name slug _id'
+        },
+    });
 
     if (!pet) {
         throw new CustomError.UnauthorizedError('You have no permission')
@@ -171,56 +216,15 @@ const updatePet = async (req, res) => {
     // HANDLE IMAGES HERE.
     // WHAT LOGIC TO IMPLEMENT. SHOULD A USE UPLOAD EACH IMAGE IN UPDATE AGAIN? HOW TO PERSIST IMAGES. 
 
-    // refactor this:
-    if(breed) {
-         // check if breed is allowed
-        checkAllowedBreeds({type, breed, catBreeds, dogBreeds, otherBreeds})
-        pet.breed = breed
-    }
-    if(type) {
-        pet.type = type
-    }
-    if(contract) {
-        pet.contract = contract
-    }
-    if(name) {
-        pet.name = name 
-    }
-    if(description) {
-        pet.description = description
-    }
-    if(age) {
-        pet.age = age
-    }
-    if(price) {
-        pet.price = price
-    }
-    if(fees) {
-        pet.fees = fees
-    }
-    if(notes) {
-        pet.notes = notes
-    }
-    if(typeof now_available == "boolean") {
-        pet.now_available = now_available
-    }
-
-
-    // handle tags relationship
-    const limitedTags = tags ? tags.slice(0, 5) : null
-    pet.tags = removeDuplicateTags(limitedTags)
-
-    await pet.save()
-
     res.status(StatusCodes.OK).json({})
 
 }
 
 const deletePet = async (req, res) => {
-    const { slug } = req.params
+    const { id } = req.params
     const userID = req.user.userId
 
-    const pet = await Pet.findOne({ slug, user: userID }).populate({
+    const pet = await Pet.findOne({ _id: id, user: userID }).populate({
         path: 'tags',
         select: 'name slug _id'
     })
@@ -251,19 +255,3 @@ module.exports = {
     deletePet,
     getRecommendedPets,
 }
-
-
-    // REFACTOR UPDATE BY IF() IN COMMENTED FASHION
-/* 
-    const updateFunction = async (model, attributes) => {
-        for (let i = 0; i < attributes.length; i++) {
-            for (const [key, value] of Object.entries(attributes[i])) {
-                if(key && value) {
-                  model.key = value
-                  return model
-                }
-            }
-        }
-    } */
-  /*   const petAttributes = [{ type }, { breed }, { contract }, { name }, { description }, { age }, { price }, { fees }]
-    await updateFunction(pet,  petAttributes) */

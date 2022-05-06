@@ -25,6 +25,9 @@ router
 router
     .route('/:slug')
     .get(getSinglePet)
+
+router
+    .route('/:id')
     .patch([authenticateUser], updatePet)
     .delete([authenticateUser], deletePet)
 //other routes add authorize permission - add policy...

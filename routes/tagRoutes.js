@@ -20,7 +20,7 @@ router
     .post([authenticateUser, authorizePermissions('admin')], createTag)
 
 router
-    .route('/:slug')
+    .route('/:id')
     .get(getSingleTag)
     .patch([authenticateUser, authorizePermissions('admin')], updateTag)
     .delete([authenticateUser, authorizePermissions('admin')], deleteTag)

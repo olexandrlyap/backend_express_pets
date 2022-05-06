@@ -9,7 +9,7 @@ const populatePets = async (tags) => {
     for (let i = 0; i < tags.length; i++) {
         const { _id } = tags[i];
         tagIDs.push(_id);
-        tagIndexesByID[_id] = tagIDs.length - 1;
+        tagIndexesByID[_id] = i;
         tags[i].pets = [];
     }
     const pets = await Pet.find({ tags: { $in: tagIDs } });
@@ -44,10 +44,15 @@ const createTag = async (req, res) => {
 }
 
 const getSingleTag = async (req, res) => {
-    const { slug } = req.params
+    const { id } = req.params
+
+ 
+    const tag = await Tag.findById(id)
+    populatePets([tag]);
 
     const tag = await Tag.findOne({ slug })
-    populatePets([tag]);
+    await populatePets([tag]);
+
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
@@ -57,9 +62,9 @@ const getSingleTag = async (req, res) => {
 }
 
 const updateTag = async (req, res) => {
-    const { slug } = req.params
+    const { id } = req.params
  
-    const tag = await Tag.findOne({ slug })
+    const tag = await Tag.findById(id)
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
@@ -69,21 +74,13 @@ const updateTag = async (req, res) => {
 }
 
 const deleteTag = async (req, res) => {
+    const { id } = req.params
 
-    const { slug } = req.params
-
-    const tag = await Tag.findOne({ slug })
+    const tag = await Tag.findOne(id)
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
     }
-
-    // delete tag from pet
-    const deleteTagFromPet = await Pet.updateMany({ tags: tag._id }, {
-        $pull: { 
-            tags: tag._id
-        }
-    })
 
     await tag.deleteOne()
 
