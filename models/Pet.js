@@ -58,10 +58,13 @@ const petSchema = new Schema({
         enum: ['mládě', 'dospělý', 'senior']
     },
     main_image: {
-        type: String,
-        required: [true, 'image must be provided'],
+        id: { type: String, required: [true, 'image must be provided'] },
+        url: { type: String, required: [true, 'image must be provided'] },
     },
-    images: [String],
+    images: [{
+        id: { type: String, required: true },
+        url: { type: String, required: true },
+    }],
     price: {
         type: Number,
         required: [true, 'Please provide product price'],

@@ -37,6 +37,11 @@ const removeDuplicateTags = (tags) => {
     return dedupedTags;
 }
 
+const bufferToDataURL = (buffer, mimeType) => {
+    const base64String = buffer.toString('base64');
+    return `data:${mimeType};base64,${base64String}`;
+}
+
 const createPet = async (req, res) => {
     const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes} = req.body
     const userID = req.user.userId
@@ -62,11 +67,16 @@ const createPet = async (req, res) => {
     // - add IMAGES LATER AFTER THE MODEL IS CREATED? Due to validation of other fields.
 
     const uploadedMainImage = await cloudinary.uploader.upload(
+image-upload-enhancements
+        bufferToDataURL(mainImage[0].buffer, mainImage[0].mimetype),
+        { folder: 'pets' }
+=======
         mainImage[0].path, 
         {
             use_filename: true,
             folder: 'pets'
         }
+ main
     )
     
     // validate images total size
@@ -79,11 +89,20 @@ const createPet = async (req, res) => {
         }
     }
 
-    // get images path 
-    const imagesLocalPaths = images.map((image) => image.path)
-
     // upload images to cloudinary and return links 
     const uploadImages = async () => {
+image-upload-enhancements
+        const promises = images.map( async ({ buffer, mimetype }) => {
+            const image = await cloudinary.uploader.upload(
+                bufferToDataURL(buffer, mimetype), 
+                { folder: 'pets' }
+            )
+
+            return {
+                id: image.public_id,
+                url: image.secure_url,
+            }
+=======
         const images = imagesLocalPaths.map( async (path) => {
             const image = await cloudinary.uploader.upload(
                              path, 
@@ -93,9 +112,10 @@ const createPet = async (req, res) => {
                              }
             )
             return image.secure_url
+main
         })
         
-        const result = await Promise.all(images)
+        const result = await Promise.all(promises)
         return result
     }
 
@@ -115,12 +135,28 @@ const createPet = async (req, res) => {
         fees,
         now_available,
         notes,
+image-upload-enhancements
+        main_image: {
+            id: uploadedMainImage.public_id,
+            url: uploadedMainImage.url,
+        },
+=======
         main_image: uploadedMainImage.secure_url,
+ main
         images: uploadedImages,
         user: ObjectId(userID),
         tags: limitedTags,
     })
 
+ image-upload-enhancements
+    // Add tags to the Pet and limit max 5
+    // const limitedTags = tags ? tags.slice(0, 5) : null
+    // const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
+    //     $push: { tags: removeDuplicateTags(limitedTags) }
+    // }, { new: true })
+
+=======
+ main
     res.status(StatusCodes.CREATED).json({ pet })
 }
 
@@ -198,6 +234,13 @@ const deletePet = async (req, res) => {
     }
 
     await pet.deleteOne()
+
+    const allImages = [pet.main_image.id];
+    for (const image of pet.images) {
+        allImages.push(image.id);
+    }
+
+    await cloudinary.api.delete_resources(allImages)
 
     res.status(StatusCodes.OK).json({pet})
 
