@@ -28,7 +28,7 @@ router
 
 router
     .route('/:id')
-    .patch([authenticateUser], updatePet)
+    .patch([authenticateUser, imageConfig], updatePet)
     .delete([authenticateUser], deletePet)
 //other routes add authorize permission - add policy...
 

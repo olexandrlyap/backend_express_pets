@@ -48,11 +48,7 @@ const getSingleTag = async (req, res) => {
 
  
     const tag = await Tag.findById(id)
-    populatePets([tag]);
-
-    const tag = await Tag.findOne({ slug })
     await populatePets([tag]);
-
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')

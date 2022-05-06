@@ -67,16 +67,8 @@ const createPet = async (req, res) => {
     // - add IMAGES LATER AFTER THE MODEL IS CREATED? Due to validation of other fields.
 
     const uploadedMainImage = await cloudinary.uploader.upload(
-image-upload-enhancements
         bufferToDataURL(mainImage[0].buffer, mainImage[0].mimetype),
         { folder: 'pets' }
-=======
-        mainImage[0].path, 
-        {
-            use_filename: true,
-            folder: 'pets'
-        }
- main
     )
     
     // validate images total size
@@ -91,28 +83,15 @@ image-upload-enhancements
 
     // upload images to cloudinary and return links 
     const uploadImages = async () => {
-image-upload-enhancements
         const promises = images.map( async ({ buffer, mimetype }) => {
             const image = await cloudinary.uploader.upload(
                 bufferToDataURL(buffer, mimetype), 
                 { folder: 'pets' }
             )
-
             return {
                 id: image.public_id,
                 url: image.secure_url,
             }
-=======
-        const images = imagesLocalPaths.map( async (path) => {
-            const image = await cloudinary.uploader.upload(
-                             path, 
-                             {
-                                 use_filename: true,
-                                 folder: 'pets'
-                             }
-            )
-            return image.secure_url
-main
         })
         
         const result = await Promise.all(promises)
@@ -135,28 +114,16 @@ main
         fees,
         now_available,
         notes,
-image-upload-enhancements
         main_image: {
             id: uploadedMainImage.public_id,
             url: uploadedMainImage.url,
         },
-=======
-        main_image: uploadedMainImage.secure_url,
- main
         images: uploadedImages,
         user: ObjectId(userID),
         tags: limitedTags,
     })
 
- image-upload-enhancements
-    // Add tags to the Pet and limit max 5
-    // const limitedTags = tags ? tags.slice(0, 5) : null
-    // const petWithTags = await Pet.findByIdAndUpdate(pet._id, {
-    //     $push: { tags: removeDuplicateTags(limitedTags) }
-    // }, { new: true })
 
-=======
- main
     res.status(StatusCodes.CREATED).json({ pet })
 }
 
@@ -184,11 +151,62 @@ const updatePet = async (req, res) => {
     const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available } = req.body
     const { id } = req.params
     const userID = req.user.userId
+    const { mainImage, images } = req.files
+
+
+    // Main image required
+    // images optional
+    // If MainImage || images not in req.files keep the original.
+    // If MainImage || images delete old images and upload new.
 
     if (breed) {
         checkAllowedBreeds({ type, breed, catBreeds, dogBreeds, otherBreeds });
     }
 
+
+    // validate MainImage 
+    if (mainImage&&mainImage[0].size >= process.env.PET_MAIN_IMAGE_MAX_SIZE) {
+        throw new CustomError.BadRequestError('Allowed capacity for main_image is 5mb')
+    }
+    let uploadedMainImage
+    // check if mainImage exists. Upload to cloudinary
+    if(mainImage) {
+        uploadedMainImage = await cloudinary.uploader.upload(
+            bufferToDataURL(mainImage[0].buffer, mainImage[0].mimetype),
+            { folder: 'pets' }
+        )
+    }
+
+    let uploadImages
+
+    if(images) {
+        const imagesSize = images.reduce((acc, image) => 
+             acc += image.size
+        , 0)
+        if(imagesSize >= process.env.PET_IMAGES_MAX_SIZE) {
+            throw new CustomError.BadRequestError('Maximum images capacity is 15mb')
+        }
+
+         uploadImages = async () => {
+            const promises = images.map( async ({ buffer, mimetype }) => {
+                const image = await cloudinary.uploader.upload(
+                    bufferToDataURL(buffer, mimetype), 
+                    { folder: 'pets' }
+                )
+                return {
+                    id: image.public_id,
+                    url: image.secure_url,
+                }
+            })
+            
+            const result = await Promise.all(promises)
+            return result
+        }
+    }
+
+    const uploadedImages = await uploadImages()
+
+    
     const pet = await Pet.findOneAndUpdate({ _id: id, user: userID }, {
         type,
         breed,
@@ -200,6 +218,12 @@ const updatePet = async (req, res) => {
         fees,
         notes,
         now_available,
+        main_image: {
+            id: uploadedMainImage&&uploadedMainImage.public_id,
+            url: uploadedMainImage&&uploadedMainImage.url ,
+        }, 
+        images: uploadedImages&&uploadedImages,
+        
         tags: tags && removeDuplicateTags(tags.slice(0, 5)),
     }, {
         new: true,
@@ -216,7 +240,7 @@ const updatePet = async (req, res) => {
     // HANDLE IMAGES HERE.
     // WHAT LOGIC TO IMPLEMENT. SHOULD A USE UPLOAD EACH IMAGE IN UPDATE AGAIN? HOW TO PERSIST IMAGES. 
 
-    res.status(StatusCodes.OK).json({})
+    res.status(StatusCodes.OK).json({ pet })
 
 }
 
@@ -235,14 +259,22 @@ const deletePet = async (req, res) => {
 
     await pet.deleteOne()
 
-    const allImages = [pet.main_image.id];
+    const deleteImages = ((mainImage, images) => {
+        const allImages = [mainImage.id]
+        for (const image of images) {
+            allImages.push(image.id);
+        }
+        return allImages
+    })
+
+    /* const allImages = [pet.main_image.id];
     for (const image of pet.images) {
         allImages.push(image.id);
     }
+ */
+    await cloudinary.api.delete_resources(deleteImages(pet.main_image, pet.images))
 
-    await cloudinary.api.delete_resources(allImages)
-
-    res.status(StatusCodes.OK).json({pet})
+    res.status(StatusCodes.OK).json({ pet })
 
 }
 
