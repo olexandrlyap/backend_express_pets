@@ -232,9 +232,7 @@ const updatePet = async (req, res) => {
         throw new CustomError.UnauthorizedError('You have no permission')
     }
 
-    // HANDLE IMAGES HERE.
-    // WHAT LOGIC TO IMPLEMENT. SHOULD A USE UPLOAD EACH IMAGE IN UPDATE AGAIN? HOW TO PERSIST IMAGES. 
-
+   
     res.status(StatusCodes.OK).json({ pet })
 
 }
@@ -254,20 +252,16 @@ const deletePet = async (req, res) => {
 
     await pet.deleteOne()
 
-    const deleteImages = ((mainImage, images) => {
-        const allImages = [mainImage.id]
-        for (const image of images) {
+    const deleteImages = (pet) => {
+        const allImages = [pet.main_image.id]
+        console.log(allImages)
+        for (const image of pet.images) {
             allImages.push(image.id);
         }
         return allImages
-    })
-
-    /* const allImages = [pet.main_image.id];
-    for (const image of pet.images) {
-        allImages.push(image.id);
     }
- */
-    await cloudinary.api.delete_resources(deleteImages(pet.main_image, pet.images))
+
+    await cloudinary.api.delete_resources( deleteImages(pet))
 
     res.status(StatusCodes.OK).json({ pet })
 
