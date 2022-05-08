@@ -5,7 +5,7 @@ const CustomError = require('../errors')
 const Pet = require('../models/Pet')
 const Tag = require('../models/Tag')
 const { ObjectId } = require('mongodb');
-const { checkAllowedBreeds } = require('../utils')
+const { checkAllowedBreeds, bufferToDataURL } = require('../utils')
 const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
 
 
@@ -35,11 +35,6 @@ const removeDuplicateTags = (tags) => {
         }
     }
     return dedupedTags;
-}
-
-const bufferToDataURL = (buffer, mimeType) => {
-    const base64String = buffer.toString('base64');
-    return `data:${mimeType};base64,${base64String}`;
 }
 
 const createPet = async (req, res) => {
