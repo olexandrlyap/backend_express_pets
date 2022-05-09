@@ -43,6 +43,16 @@ const UserSchema = new mongoose.Schema({
   passwordTokenExpirationDate: {
     type: Date,
   },
+  avatar: {
+    type: String,
+    maxlength: 1000,
+    //add random selection between multiple avatars.
+    default: 'https://res.cloudinary.com/de9rel1yu/image/upload/v1652103632/default_assets/36..04_pbbksy.jpg'
+  },
+  hasProfile: {
+    type: Boolean,
+    default: false
+  },
   profile: {
     type: mongoose.Types.ObjectId,
     ref: 'Profile',

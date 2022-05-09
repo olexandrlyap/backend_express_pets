@@ -7,19 +7,20 @@ const profileSchema = new Schema({
     about: {
         type: String, 
         maxLength: 1000,
-        minLength: 15,
         trim: true,
+        default: ''
     },
     public_email: {
         type: String,
         maxLength: 500,
-        validate: [isEmail, 'please enter email']  
+        validate: [isEmail, 'please enter email'] ,
     },
     public_number: {
         type: Number,
         minLength: 9,
         maxLength: 9,
         trim: true,
+        default: null
     },
     website: {
         type: String,
@@ -41,6 +42,24 @@ const profileSchema = new Schema({
         maxLength: 1000,
         default: ''
     },
+    location: {
+        type: String,
+        maxLength: 1000,
+        default: ''
+    },
+    main_image: {
+        id: { type: String, required: [true, 'image must be provided'] },
+        url: { type: String, required: [true, 'image must be provided'] },
+    },
+    images: [{
+        id: { type: String, required: true },
+        url: { type: String, required: true },
+    }],
+    user: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+        required: true,
+    }
 })
 
 module.exports = mongoose.model('Profile', profileSchema)

@@ -93,7 +93,7 @@ const createPet = async (req, res) => {
         return result
     }
 
-    const uploadedImages = await uploadImages()
+    const uploadedImages = images ? await uploadImages() : []
 
 
     const limitedTags = tags ? removeDuplicateTags(tags.split(',').slice(0, 5)) : []
@@ -199,7 +199,7 @@ const updatePet = async (req, res) => {
         }
     }
 
-    const uploadedImages = await uploadImages()
+    const uploadedImages = images ? await uploadImages() : []
 
     
     const pet = await Pet.findOneAndUpdate({ _id: id, user: userID }, {
@@ -254,7 +254,6 @@ const deletePet = async (req, res) => {
 
     const deleteImages = (pet) => {
         const allImages = [pet.main_image.id]
-        console.log(allImages)
         for (const image of pet.images) {
             allImages.push(image.id);
         }
