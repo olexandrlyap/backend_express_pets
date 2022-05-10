@@ -22,6 +22,7 @@ const userRouter = require('./routes/userRoutes');
 const petRouter = require('./routes/petRoutes')
 const tagRouter = require('./routes/tagRoutes')
 const profileRouter = require('./routes/profileRoutes')
+const favoritePetRouter = require('./routes/favoritePetRoutes')
 
 
 // middleware
@@ -53,12 +54,12 @@ app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
 
 app.use(express.static('./public'));
-//app.use(fileUpload());
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/pets', petRouter)
 app.use('/api/v1/tags', tagRouter)
 app.use('/api/v1/profiles', profileRouter)
+app.use('/api/v1/favorite-pets', favoritePetRouter)
 
 
 app.use(notFoundMiddleware);
