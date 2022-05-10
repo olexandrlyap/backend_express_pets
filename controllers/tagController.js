@@ -6,26 +6,27 @@ const Tag = require('../models/Tag')
 const populatePets = async (tags) => {
     const tagIDs = []; // IDs for the query
     const tagIndexesByID = {}; // a way for us to quickly find a tag in the array by ID without looping
+    const tagsCopy = [];
     for (let i = 0; i < tags.length; i++) {
         const { _id } = tags[i];
         tagIDs.push(_id);
         tagIndexesByID[_id] = i;
-        tags[i].pets = [];
+        tagsCopy.push({ ...tags[i].toJSON(), pets: [] });
     }
     const pets = await Pet.find({ tags: { $in: tagIDs } });
     for (const pet of pets) {
         for (const tagID of pet.tags) {
             if (typeof tagIndexesByID[tagID] === 'number') {
-                tags[tagIndexesByID[tagID]].pets.push(pet._id);
+                tagsCopy[tagIndexesByID[tagID]].pets.push(pet._id);
             }
         }
     }
+    return tagsCopy;
 }
 
 const getAllTags = async (req, res) => {
     const tags = await Tag.find({})
-    await populatePets(tags);
-    res.status(StatusCodes.OK).json({ tags })
+    res.status(StatusCodes.OK).json({ tags: await populatePets(tags) });
 }
 
 const createTag = async (req, res) => {
@@ -48,13 +49,13 @@ const getSingleTag = async (req, res) => {
 
  
     const tag = await Tag.findById(id)
-    await populatePets([tag]);
+    const [populatedTag] = await populatePets([tag]);
 
     if (!tag) {
         throw new CustomError.NotFoundError('Tag was not found')
     }
 
-    res.status(StatusCodes.OK).json({tag})
+    res.status(StatusCodes.OK).json({ tag: populatedTag })
 }
 
 const updateTag = async (req, res) => {
