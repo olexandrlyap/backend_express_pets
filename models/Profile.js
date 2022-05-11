@@ -60,6 +60,9 @@ const profileSchema = new Schema({
         ref: 'User',
         required: true,
     }
-})
+}, { timestamps: true })
+
+// one user = one profile
+profileSchema.index({ user: 1 }, { unique: true })
 
 module.exports = mongoose.model('Profile', profileSchema)

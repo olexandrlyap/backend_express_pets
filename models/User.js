@@ -57,7 +57,12 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: 'Profile',
     default: {},
-  }
+  },
+  reviews: [{
+    type: mongoose.Types.ObjectId,
+    ref: 'Review',
+    default: []
+  }]
 })
 
 UserSchema.pre('save', async function () {

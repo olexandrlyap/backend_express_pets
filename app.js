@@ -23,6 +23,7 @@ const petRouter = require('./routes/petRoutes')
 const tagRouter = require('./routes/tagRoutes')
 const profileRouter = require('./routes/profileRoutes')
 const favoritePetRouter = require('./routes/favoritePetRoutes')
+const reviewRouter = require('./routes/reviewRoutes')
 
 
 // middleware
@@ -49,8 +50,10 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(xss());
 app.use(mongoSanitize());
-
+//app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
+
+
 app.use(cookieParser(process.env.JWT_SECRET));
 
 app.use(express.static('./public'));
@@ -60,6 +63,8 @@ app.use('/api/v1/pets', petRouter)
 app.use('/api/v1/tags', tagRouter)
 app.use('/api/v1/profiles', profileRouter)
 app.use('/api/v1/favorite-pets', favoritePetRouter)
+app.use('/api/v1/reviews', reviewRouter)
+
 
 
 app.use(notFoundMiddleware);
