@@ -4,56 +4,18 @@ const User = require('../models/User')
 const Review = require('../models/Review')
 const { ObjectId } = require('mongodb')
 
-
-
-const populateReviewsToUser = async (users) => {
-    if(!users[0]) return
-    const userIDs = []
-    const userIndexesByID = {}
-    const userCopy = []
-
-    for (let i = 0; i < users.length; i++) {
-        const { _id } = users[i]
-        userIDs.push(_id)
-        userIndexesByID[i] = _id
-       // Object.assign(userIndexesByID, { [i]: _id })
-        userCopy.push({...users[i].toJSON(), reviews: []})
-    }
-
-   // console.log(userIndexesByID)
-
-    const reviews = await Review.find({ toUser: { $in: userIDs }})
-
-  //  console.log(userCopy)
-    for (const review of reviews) {
-        for (const key in userIndexesByID) {
-          if(userIndexesByID[key].toString() === review.toUser.toString()) {
-              userCopy.forEach(user => {
-                if(user._id.toString() ===  review.toUser.toString()) {
-                    return user.reviews.push(review._id)
-                }
-              })
-          }
-            
-        }
-    }
-
-    return userCopy
-
-}
-
 const getAllReviewsToUser = async (req, res) => {
     const { username } = req.params
 
-   const user = await User.findOne({ username })
+    const user = await User.findOne({ username })
 
-   const users = await User.find({})
+    // for single user
+    const reviews = await Review.find({ toUser: user.id })
+    res.status(StatusCodes.OK).json({ reviews })
 
-   // for single user
-  res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUser([user]) })
-
-   // for every user -> add new method and route
-  // res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUser( users) })
+    // for every user -> add new method and route
+    // const users = await User.find({})
+    // res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUser( users) })
 }
 
 const getAllReviewsFromUser = async (req, res) => {
@@ -100,13 +62,6 @@ const createReview = async (req, res) => {
         toUser: ObjectId(user._id)
     })
 
-/*   await user.updateOne({
-      $push: {
-          reviews: ObjectId(review._id)
-      }
-  }, { new: true })
- */
-
     res.status(StatusCodes.OK).json({ review, user })
 }
 
@@ -116,18 +71,9 @@ const createReview = async (req, res) => {
  */
 const deleteReview = async (req, res) => {
     const userID = req.user.userId
-    const { username, id } = req.params
-    //username not necessary
+    const { id } = req.params
 
     const review = await Review.findOneAndDelete({ fromUser: userID, _id: id })
-
- /*    const user = await User.findOneAndUpdate({ _id: review.toUser },
-       {
-        $pull: {
-           reviews: ObjectId(review._id)
-        }
-    }, { new: true })
- */
 
     res.status(StatusCodes.OK).json({ review  })
 }
