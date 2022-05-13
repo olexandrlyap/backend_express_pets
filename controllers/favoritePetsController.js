@@ -9,7 +9,7 @@ const { ObjectId } = require('mongodb');
 const getFavoritePets = async (req, res) => {
     const userID = req.user.userId
 
-    const favoritePets = await FavoritePet.findOne({ user: userID}).populate('pets')
+    const favoritePets = await FavoritePet.findOne({ user: userID }).populate('pets')
     //?limit, pagination
     //? what about naming favoritePets || favoritePet
 

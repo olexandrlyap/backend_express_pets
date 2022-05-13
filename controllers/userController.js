@@ -16,7 +16,7 @@ const getAllUsers = async (req, res) => {
 const getSingleUser = async (req, res) => {
   const { username } = req.params
 
-  const user = await User.findOne({ username }).select('_id username role isVerified reviews ')
+  const user = await User.findOne({ username }).select('_id username role isVerified reviews profile ').populate('profile')
   if (!user) {
     throw new CustomError.NotFoundError(`No user with username : ${username}`)
   }

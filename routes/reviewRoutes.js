@@ -10,7 +10,7 @@ const {
    getAllReviewsFromUser,
    getAllReviewsToUser,
    createReview,
-   updateReview,
+  /*  updateReview, */
    deleteReview
 } = require('../controllers/reviewController')
 
@@ -25,7 +25,7 @@ router
 
 router
     .route('/:username/:id')
-    .patch([authenticateUser], updateReview)
+   /*  .patch([authenticateUser], updateReview) */
     .delete([authenticateUser], deleteReview)
 
 module.exports = router

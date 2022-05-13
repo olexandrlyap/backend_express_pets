@@ -49,21 +49,31 @@ const UserSchema = new mongoose.Schema({
     //add random selection between multiple avatars.
     default: 'https://res.cloudinary.com/de9rel1yu/image/upload/v1652103632/default_assets/36..04_pbbksy.jpg'
   },
-  hasProfile: {
-    type: Boolean,
-    default: false
-  },
   profile: {
     type: mongoose.Types.ObjectId,
     ref: 'Profile',
-    default: {},
   },
-  reviews: [{
+ /*  reviews: [{
     type: mongoose.Types.ObjectId,
     ref: 'Review',
     default: []
-  }]
+  }], */
+}, {  timestamps: true,  toJSON: { virtuals: true }, toObject: { virtuals: true }, })
+
+// User can have only one profile
+UserSchema.index({  profile: 1 }, { unique: true })
+
+
+
+/* UserSchema.virtual('numOfReviews').get(function() {
+  return this.reviews?.length || 0
+}) */
+
+UserSchema.virtual('hasProfile').get(function() {
+  return this.profile?.length ? true : false
 })
+
+
 
 UserSchema.pre('save', async function () {
   if(this.isModified('username')) {

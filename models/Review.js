@@ -8,6 +8,7 @@ const reviewSchema = new Schema(
       type: Number,
       min: 1,
       max: 5,
+      default: 5,
       required: [true, 'Please provide rating'],
     },
     title: {
@@ -40,5 +41,7 @@ const reviewSchema = new Schema(
 
 
 reviewSchema.index({  fromUser: 1, toUser: 1 }, { unique: true })
+
+
 
 module.exports = mongoose.model('Review', reviewSchema)
