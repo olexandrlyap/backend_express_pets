@@ -16,15 +16,13 @@ const populateReviewsToUser = async (users) => {
         const { _id } = users[i]
         userIDs.push(_id)
         userIndexesByID[i] = _id
-       // Object.assign(userIndexesByID, { [i]: _id })
         userCopy.push({...users[i].toJSON(), reviews: []})
     }
 
-   // console.log(userIndexesByID)
+     console.log(userIndexesByID)
 
     const reviews = await Review.find({ toUser: { $in: userIDs }})
 
-  //  console.log(userCopy)
     for (const review of reviews) {
         for (const key in userIndexesByID) {
           if(userIndexesByID[key].toString() === review.toUser.toString()) {
@@ -40,20 +38,32 @@ const populateReviewsToUser = async (users) => {
 
     return userCopy
 
+
 }
 
-const getAllReviewsToUser = async (req, res) => {
-    const { username } = req.params
 
-   const user = await User.findOne({ username })
+const getAllReviewsToUser = async (req, res) => {
+   const { username } = req.params
+
+   /* const user = await User.findOne({ username })
+   const reviews = await Review.find({ toUser: user.id })
+
+   res.status(StatusCodes.OK).json({ reviews }) */
+   
+
+   /* TEST populateReviewsToUser for multiple users */
 
    const users = await User.find({})
+   const usersReviews = await populateReviewsToUser(users)
+   const mappedReviews = usersReviews.map((review) => {
+      return {
+          username: review.username,
+          reviews: review.reviews
+      }
+   })
 
-   // for single user
-  res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUser([user]) })
 
-   // for every user -> add new method and route
-  // res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUser( users) })
+   res.status(StatusCodes.OK).json({ usersWithReviews: mappedReviews })
 }
 
 const getAllReviewsFromUser = async (req, res) => {
@@ -100,12 +110,6 @@ const createReview = async (req, res) => {
         toUser: ObjectId(user._id)
     })
 
-/*   await user.updateOne({
-      $push: {
-          reviews: ObjectId(review._id)
-      }
-  }, { new: true })
- */
 
     res.status(StatusCodes.OK).json({ review, user })
 }
@@ -116,18 +120,8 @@ const createReview = async (req, res) => {
  */
 const deleteReview = async (req, res) => {
     const userID = req.user.userId
-    const { username, id } = req.params
-    //username not necessary
 
     const review = await Review.findOneAndDelete({ fromUser: userID, _id: id })
-
- /*    const user = await User.findOneAndUpdate({ _id: review.toUser },
-       {
-        $pull: {
-           reviews: ObjectId(review._id)
-        }
-    }, { new: true })
- */
 
     res.status(StatusCodes.OK).json({ review  })
 }
