@@ -5,7 +5,6 @@ const Review = require('../models/Review')
 const { ObjectId } = require('mongodb')
 
 
-
 const populateReviewsToUser = async (users) => {
     if(!users[0]) return
     const userIDs = []
@@ -37,8 +36,6 @@ const populateReviewsToUser = async (users) => {
     }
 
     return userCopy
-
-
 }
 
 
@@ -62,8 +59,8 @@ const getAllReviewsToUser = async (req, res) => {
       }
    })
 
-
    res.status(StatusCodes.OK).json({ usersWithReviews: mappedReviews })
+
 }
 
 const getAllReviewsFromUser = async (req, res) => {
@@ -110,7 +107,6 @@ const createReview = async (req, res) => {
         toUser: ObjectId(user._id)
     })
 
-
     res.status(StatusCodes.OK).json({ review, user })
 }
 
@@ -120,6 +116,7 @@ const createReview = async (req, res) => {
  */
 const deleteReview = async (req, res) => {
     const userID = req.user.userId
+    const { id } = req.params
 
     const review = await Review.findOneAndDelete({ fromUser: userID, _id: id })
 

@@ -9,7 +9,6 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimiter = require('express-rate-limit');
 const helmet = require('helmet');
-const xss = require('xss-clean');
 const cors = require('cors');
 const mongoSanitize = require('express-mongo-sanitize');
 
@@ -48,9 +47,7 @@ app.use(
 );
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(xss());
 app.use(mongoSanitize());
-//app.use(express.urlencoded({ extended: true }))
 app.use(express.json());
 
 
