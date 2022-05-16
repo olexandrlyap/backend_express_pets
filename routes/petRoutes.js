@@ -6,6 +6,7 @@ const { imageConfig } = require('../controllers/petUploadImagesController')
 const {
     authenticateUser,
     authorizePermissions,
+    publicRouteAuthenticateUser,
   } = require('../middleware/authentication');
 
 const {
@@ -19,12 +20,12 @@ const {
 
 router
     .route('/')
-    .get(getAllPets)
+    .get([publicRouteAuthenticateUser], getAllPets)
     .post([authenticateUser, imageConfig], createPet)
 
 router
     .route('/:slug')
-    .get(getSinglePet)
+    .get([publicRouteAuthenticateUser], getSinglePet)
 
 router
     .route('/:id')

@@ -4,19 +4,41 @@ const cloudinary = require('cloudinary').v2;
 const CustomError = require('../errors')
 const Pet = require('../models/Pet')
 const Tag = require('../models/Tag')
+const FavoritePet = require('../models/FavoritePet')
 const { ObjectId } = require('mongodb');
 const { checkAllowedBreeds, bufferToDataURL } = require('../utils')
-const { catBreeds, dogBreeds, otherBreeds } = require('../constants')
+const { catBreeds, dogBreeds, otherBreeds } = require('../constants');
+const { set } = require('mongoose');
+
 
 
 // TODO: DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
 
 
 const getAllPets = async (req, res) => {
+    const userID = req.user?.userId ? req.user.userId  : null
+
     // add filter, sorting 
     const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
+
+    
+    const favoritePets = await FavoritePet.find({ user: userID })
+
+    const favoritePetIDs = new Set()
+    for (const favoritePet of favoritePets) {
+        favoritePetIDs.add(favoritePet.pet.toString())
+    }
+
     const pets = await Pet.find({}).populate(populateWithData)
-    res.status(StatusCodes.OK).json({pets})
+
+    const petsWithFavorite = pets.map((pet) => {
+        return {
+            ...pet.toJSON(),
+            isFavorite: favoritePetIDs.has(pet.id.toString())
+        }
+    })
+
+    res.status(StatusCodes.OK).json({ pets: petsWithFavorite })
 }
 
 const getRecommendedPets = async (req, res) => {
@@ -125,6 +147,8 @@ const createPet = async (req, res) => {
 
 const getSinglePet = async (req, res) => {
     const { slug } = req.params
+    const userID = req.user?.userId ? req.user.userId  : null
+
     const pet = await Pet.findOne({ slug }).populate([ 
         {
             path: 'tags',
@@ -138,7 +162,15 @@ const getSinglePet = async (req, res) => {
     if (!pet) {
         throw new CustomError.NotFoundError('Pet doesnt exist')
     }
-    res.status(StatusCodes.OK).json({ pet })
+
+    const isPetFavorite = await  FavoritePet.exists({ user: userID, pet: pet._id })
+
+    const petWithFavorite = {
+        ...pet.toJSON(),
+        isFavorite: isPetFavorite
+    }
+
+    res.status(StatusCodes.OK).json({ pet: petWithFavorite })
 
 }
 
