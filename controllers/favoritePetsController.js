@@ -9,11 +9,17 @@ const { ObjectId } = require('mongodb');
 const getFavoritePets = async (req, res) => {
     const userID = req.user.userId
 
-    const favoritePets = await FavoritePet.find({ user: userID }).populate('pet')
-    //?limit, pagination
-    //? what about naming favoritePets || favoritePet
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page- 1) * limit
 
-    res.status(StatusCodes.CREATED).json({ favoritePets })
+
+    const favoritePets = await FavoritePet.find({ user: userID })
+        .populate('pet')
+        .skip(skip)
+        .limit(limit)
+
+    res.status(StatusCodes.CREATED).json({ favoritePets, nbHits: favoritePets?.length })
 }
 
 const createFavoritePet = async (req, res) => {
