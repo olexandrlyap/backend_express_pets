@@ -18,8 +18,6 @@ const populateReviewsToUser = async (users) => {
         userCopy.push({...users[i].toJSON(), reviews: []})
     }
 
-     console.log(userIndexesByID)
-
     const reviews = await Review.find({ toUser: { $in: userIDs }})
 
     for (const review of reviews) {
@@ -42,15 +40,16 @@ const populateReviewsToUser = async (users) => {
 const getAllReviewsToUser = async (req, res) => {
    const { username } = req.params
 
-   /* const user = await User.findOne({ username })
+   const user = await User.findOne({ username })
    const reviews = await Review.find({ toUser: user.id })
+   const numOfReviews = await Review.find({ toUser: user.id }).count()
 
-   res.status(StatusCodes.OK).json({ reviews }) */
+   res.status(StatusCodes.OK).json({ reviews, numOfReviews }) 
    
 
    /* TEST populateReviewsToUser for multiple users */
 
-   const users = await User.find({})
+  /*  const users = await User.find({})
    const usersReviews = await populateReviewsToUser(users)
    const mappedReviews = usersReviews.map((review) => {
       return {
@@ -59,20 +58,25 @@ const getAllReviewsToUser = async (req, res) => {
       }
    })
 
-   res.status(StatusCodes.OK).json({ usersWithReviews: mappedReviews })
+   res.status(StatusCodes.OK).json({ usersWithReviews: mappedReviews }) */
 
 }
 
 const getAllReviewsFromUser = async (req, res) => {
     const userID = req.user.userId
 
-    const reviews = await Review.find({ fromUser: userID })
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page- 1) * limit
+
+    const reviews = await Review.find({ fromUser: userID }).skip(skip).limit(limit)
+    const numOfReviews = await Review.find({ fromUser: userID }).count()
 
     if(!reviews?.length) {
         throw new CustomError.NotFoundError('You have not written any reviews yet')
     }
 
-    res.status(StatusCodes.OK).json({ reviews })
+    res.status(StatusCodes.OK).json({ reviews, numOfReviews })
    
 }
 

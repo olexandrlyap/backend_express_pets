@@ -13,7 +13,6 @@ const getFavoritePets = async (req, res) => {
     const limit = Number(req.query.limit) || 10
     const skip = (page- 1) * limit
 
-
     const favoritePets = await FavoritePet.find({ user: userID })
         .populate('pet')
         .skip(skip)

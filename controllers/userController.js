@@ -17,11 +17,17 @@ const getSingleUser = async (req, res) => {
   const { username } = req.params
 
   const user = await User.findOne({ username }).select('_id username role isVerified reviews profile ').populate('profile')
+  
+  const userWithNumberOfPets = {
+    ...user.toJSON(),
+    numberOfPets: await user.calculateNumberOfPets()
+  }
+
   if (!user) {
     throw new CustomError.NotFoundError(`No user with username : ${username}`)
   }
 
-  res.status(StatusCodes.OK).json({ user })
+  res.status(StatusCodes.OK).json({ user: userWithNumberOfPets  })
 }
 
 const showCurrentUser = async (req, res) => {
