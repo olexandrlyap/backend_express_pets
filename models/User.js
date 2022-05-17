@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
+const Pet = require('./Pet')
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -53,34 +54,20 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: 'Profile',
   },
- /*  reviews: [{
-    type: mongoose.Types.ObjectId,
-    ref: 'Review',
-    default: []
-  }], */
 }, {  timestamps: true,  toJSON: { virtuals: true }, toObject: { virtuals: true }, })
 
 // User can have only one profile
-UserSchema.index({  profile: 1 }, { unique: true })
-
-
-
-/* UserSchema.virtual('numOfReviews').get(function() {
-  return this.reviews?.length || 0
-}) */
+UserSchema.index({ profile: 1 }, { unique: true })
 
 UserSchema.virtual('hasProfile').get(function() {
   return this.profile?.length ? true : false
 })
 
-
-
 UserSchema.pre('save', async function () {
   if(this.isModified('username')) {
     this.username = this.username.replace(/\s+/g, '')
   }
-  // console.log(this.modifiedPaths())
-  // console.log(this.isModified('name'))
+
   if (!this.isModified('password')) return
   const salt = await bcrypt.genSalt(10)
   this.password = await bcrypt.hash(this.password, salt)
@@ -90,5 +77,11 @@ UserSchema.methods.comparePassword = async function (canditatePassword) {
   const isMatch = await bcrypt.compare(canditatePassword, this.password)
   return isMatch
 }
+
+UserSchema.methods.calculateNumberOfPets = async function () {
+  const pets = await Pet.find({ user: this._id}).count()
+  return pets
+}
+
 
 module.exports = mongoose.model('User', UserSchema)

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const slug = require('mongoose-slug-generator')
+const sanitizeHtml = require('sanitize-html');
 
 mongoose.plugin(slug)
 
@@ -90,5 +91,34 @@ const petSchema = new Schema({
     },
 
 },  { timestamps: true })
+
+
+
+const disallowHtmlOptions = {
+    allowedTags: [],
+    allowedAttributes: {},
+};
+
+petSchema.pre('save', function preSavePet(next) {
+    if (this.slug) {
+        this.slug = sanitizeHtml(this.slug, disallowHtmlOptions);
+    }
+
+    if (this.breed) {
+        this.breed = sanitizeHtml(this.breed, disallowHtmlOptions)
+    }
+
+    if (this.name) {
+        this.name = sanitizeHtml(this.name, disallowHtmlOptions);
+    }
+
+    if (this.notes) {
+        this.notes = sanitizeHtml(this.notes, disallowHtmlOptions);
+    }
+
+    if (this.description) {
+        this.description = sanitizeHtml(this.description);
+    }
+});
 
 module.exports = mongoose.model('Pet', petSchema)

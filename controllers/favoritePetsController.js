@@ -9,72 +9,53 @@ const { ObjectId } = require('mongodb');
 const getFavoritePets = async (req, res) => {
     const userID = req.user.userId
 
-    const favoritePets = await FavoritePet.findOne({ user: userID }).populate('pets')
-    //?limit, pagination
-    //? what about naming favoritePets || favoritePet
+    const page = Number(req.query.page) || 1
+    const limit = Number(req.query.limit) || 10
+    const skip = (page- 1) * limit
 
-    res.status(StatusCodes.CREATED).json({ favoritePets })
+    const favoritePets = await FavoritePet.find({ user: userID })
+        .populate('pet')
+        .skip(skip)
+        .limit(limit)
+
+    res.status(StatusCodes.CREATED).json({ favoritePets, nbHits: favoritePets?.length })
 }
 
 const createFavoritePet = async (req, res) => {
-
-    // single user = one array of favorited Pets
-    // create relationship with register a user
-
-    const userID = req.user.userId
-
-    const checkIfIsFavoriteCreated = await FavoritePet.findOne({ user: userID })
-
-    if(checkIfIsFavoriteCreated&&Object.keys(checkIfIsFavoriteCreated).length) {
-        throw new CustomError.BadRequestError('You allready have favorited created')
-    }
-
-    const favoritePet = await FavoritePet.create({
-        user: ObjectId(userID)
-    })
-
-    res.status(StatusCodes.CREATED).json({ favoritePet })
-}
-
-const updateFavoritePets = async (req, res) => {
     const userID = req.user.userId
     const petID = req.params.id
 
-    const checkIfIsFavorite = await FavoritePet.findOne({ user: userID })
+    const checkIfIsFavorite = await FavoritePet.findOne({ user: userID, pet: petID })
 
-    if( checkIfIsFavorite&&checkIfIsFavorite.pets.includes(petID) ) {
-        throw new CustomError.BadRequestError('You allready have this pet favorited')
+    if (checkIfIsFavorite&&Object.values(checkIfIsFavorite)) {
+        throw new CustomError.BadRequestError('You already favorited this pet')
     }
 
-    //?? add property in favoritePets -> isFavorited - if user has the pet favorited = true
-    //?? add favoritePets to User?
+    const favoritePet = await FavoritePet.create({
+            pet: ObjectId(petID),
+            user: ObjectId(userID)
+        })
+    
 
-    const favoritePet = await FavoritePet.findOneAndUpdate({ user: userID }, {
-        $push: { pets: ObjectId(petID) }
-    }, {
-        new: true
-    })
-
-    res.status(StatusCodes.CREATED).json({ favoritePet })
+    res.status(StatusCodes.CREATED).json({ favoritePet  })
 }
 
 const deleteFavoritePet = async (req, res) => {
     const userID = req.user.userId
     const petID = req.params.id
 
-    const deletedFavoritedPet = await FavoritePet.findOneAndUpdate({ user: userID }, {
-        $pull: { pets: ObjectId(petID) }
-    }, {
-        new: true
-    })
+    const deletedFavoritedPet = await FavoritePet.findOneAndDelete(
+        { user: userID, pet: petID }, 
+        { new: true }
+        )
 
-    res.status(StatusCodes.CREATED).json({ favoritePet: deletedFavoritedPet })
+    res.status(StatusCodes.CREATED).json({ favoritePet: deletedFavoritedPet  })
 
 }
 
 module.exports = {
     getFavoritePets,
     createFavoritePet,
-    updateFavoritePets,
     deleteFavoritePet,
 }
+

@@ -9,19 +9,16 @@ const {
     getFavoritePets,
     createFavoritePet,
     deleteFavoritePet,
-    updateFavoritePets
 } = require('../controllers/favoritePetsController');
 const { route } = require('./petRoutes');
 
 router
     .route('/')
     .get([authenticateUser], getFavoritePets)
-    .post([authenticateUser], createFavoritePet)
 
 router
     .route('/:id')
-    //.post([authenticateUser], createFavoritePet)
-    .patch([authenticateUser], updateFavoritePets)
+    .post([authenticateUser], createFavoritePet)
     .delete([authenticateUser], deleteFavoritePet)
 
     module.exports = router
