@@ -41,24 +41,15 @@ const getAllReviewsToUser = async (req, res) => {
    const reviews = await Review.find({ toUser: user.id })
    const numOfReviews = await Review.find({ toUser: user.id }).count()
 
-   res.status(StatusCodes.OK).json({ reviews, numOfReviews }) 
+   res.status(StatusCodes.OK).json({ reviews, numOfReviews })  
    
 
-   /* TEST populateReviewsToUser for multiple users */
-
-  /*  const users = await User.find({})
-   const usersWithReviews = await populateReviewsToUser(users)
-   // Probably not necessary, you can return usersWithReviews directly
-   const mappedReviews = usersReviews.map((review) => {
-      return {
-          username: review.username,
-          reviews: review.reviews
-      }
-   })
-   */
-
    // for single user
-   res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers([user])[0] })
+ // res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers([user])[0] })
+
+   // mulitple users
+/*  const users = await User.find({})
+ res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers(users)}) */
 }
 
 const getAllReviewsFromUser = async (req, res) => {
