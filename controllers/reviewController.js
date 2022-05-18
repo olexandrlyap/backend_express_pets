@@ -4,36 +4,33 @@ const User = require('../models/User')
 const Review = require('../models/Review')
 const { ObjectId } = require('mongodb')
 
+const populateReviewsToUsers = async (users) => {
+    if(!users[0]) return []
 
-const populateReviewsToUser = async (users) => {
-    if(!users[0]) return
     const userIDs = []
     const userIndexesByID = {}
-    const userCopy = []
+    const usersCopy = []
 
     for (let i = 0; i < users.length; i++) {
         const { _id } = users[i]
+
         userIDs.push(_id)
-        userIndexesByID[i] = _id
-        userCopy.push({...users[i].toJSON(), reviews: []})
+        userIndexesByID[_id] = i
+
+        const userWithReviews = { ...users[i].toJSON(), reviews: [] }
+        usersCopy.push(userWithReviews)
     }
 
     const reviews = await Review.find({ toUser: { $in: userIDs }})
 
     for (const review of reviews) {
-        for (const key in userIndexesByID) {
-          if(userIndexesByID[key].toString() === review.toUser.toString()) {
-              userCopy.forEach(user => {
-                if(user._id.toString() ===  review.toUser.toString()) {
-                    return user.reviews.push(review._id)
-                }
-              })
-          }
-            
-        }
+        const userID = review.toUser.toString()
+        const userIndex = userIndexesByID[userID]
+        const user = usersCopy[userIndex]
+        user.reviews.push(review)
     }
 
-    return userCopy
+    return usersCopy
 }
 
 
@@ -50,16 +47,18 @@ const getAllReviewsToUser = async (req, res) => {
    /* TEST populateReviewsToUser for multiple users */
 
   /*  const users = await User.find({})
-   const usersReviews = await populateReviewsToUser(users)
+   const usersWithReviews = await populateReviewsToUser(users)
+   // Probably not necessary, you can return usersWithReviews directly
    const mappedReviews = usersReviews.map((review) => {
       return {
           username: review.username,
           reviews: review.reviews
       }
    })
+   */
 
-   res.status(StatusCodes.OK).json({ usersWithReviews: mappedReviews }) */
-
+   // for single user
+   res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers([user])[0] })
 }
 
 const getAllReviewsFromUser = async (req, res) => {
