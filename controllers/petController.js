@@ -7,7 +7,7 @@ const Tag = require('../models/Tag')
 const FavoritePet = require('../models/FavoritePet')
 const { ObjectId } = require('mongodb');
 const { checkAllowedBreeds, bufferToDataURL } = require('../utils')
-const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery, allowedContracts  } = require('../constants');
+const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery, allowedContracts, allowedAge  } = require('../constants');
 
 
 // TODO: DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
@@ -15,7 +15,7 @@ const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
-    const { type, breed, contract } = req.query
+    const { type, breed, contract, now_available, featured, age, sort } = req.query
 
     // add filter, sorting, populating
     const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
@@ -30,8 +30,15 @@ const getAllPets = async (req, res) => {
     if(contract) {
         queryObject.contract = allowedContracts.includes(contract) ? contract : ''
     }
-
- console.log(queryObject)
+    if(now_available === 'true' || 'false') {
+        queryObject.now_available = now_available
+    }
+    if(featured === 'true' || 'false') {
+        queryObject.featured = featured
+    }
+    if(age) {
+        queryObject.age = allowedAge.includes(age) ? age : ''
+    }
 
     // delete empty objects using for in || try reduce and don't mutate?
     for (const key in queryObject) {
@@ -51,6 +58,7 @@ const getAllPets = async (req, res) => {
 
     // get pets
     const pets = await Pet.find(queryObject).populate(populateWithData)
+
 
     const petsWithFavorite = pets.map((pet) => {
         return {

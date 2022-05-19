@@ -15,6 +15,12 @@ const allowedContracts = [
     'útulek'
 ]
 
+const allowedAge = [
+    'mládě', 
+    'dospělý', 
+    'senior'
+]
+
 const checkAllowedBreedsQuery = (breed) => {
     const allowedBreeds = [
         ...catBreeds,
@@ -27,5 +33,6 @@ const checkAllowedBreedsQuery = (breed) => {
 module.exports = {
     allowedTypes,
     checkAllowedBreedsQuery,
-    allowedContracts 
+    allowedContracts,
+    allowedAge
 }

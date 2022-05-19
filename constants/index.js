@@ -1,7 +1,7 @@
 const catBreeds = require('./catBreeds')
 const dogBreeds = require('./dogBreeds')
 const otherBreeds = require('./otherBreeds')
-const { allowedTypes, checkAllowedBreedsQuery, allowedContracts  } = require('./petQuery')
+const { allowedTypes, checkAllowedBreedsQuery, allowedContracts, allowedAge  } = require('./petQuery')
 
 module.exports = {
     catBreeds,
@@ -9,5 +9,6 @@ module.exports = {
     otherBreeds,
     allowedTypes,
     checkAllowedBreedsQuery,
-    allowedContracts 
+    allowedContracts,
+    allowedAge
 }
