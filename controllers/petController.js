@@ -7,9 +7,7 @@ const Tag = require('../models/Tag')
 const FavoritePet = require('../models/FavoritePet')
 const { ObjectId } = require('mongodb');
 const { checkAllowedBreeds, bufferToDataURL } = require('../utils')
-const { catBreeds, dogBreeds, otherBreeds } = require('../constants');
-
-
+const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery, allowedContracts  } = require('../constants');
 
 
 // TODO: DELETE IMAGE WHEN THEY ARE NOT USED -> SERVER, CLOUDINARY
@@ -17,19 +15,42 @@ const { catBreeds, dogBreeds, otherBreeds } = require('../constants');
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
+    const { type, breed, contract } = req.query
 
-    // add filter, sorting 
+    // add filter, sorting, populating
     const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
+    const queryObject = {}
 
-    
-    const favoritePets = await FavoritePet.find({ user: userID })
+    if(type) {
+        queryObject.type = allowedTypes.includes(type) ? type : ''
+    }
+    if(breed) {
+        queryObject.breed = checkAllowedBreedsQuery(breed) ? breed : ''
+    }
+    if(contract) {
+        queryObject.contract = allowedContracts.includes(contract) ? contract : ''
+    }
+
+ console.log(queryObject)
+
+    // delete empty objects using for in || try reduce and don't mutate?
+    for (const key in queryObject) {
+        if( queryObject[key] === '') {
+            delete queryObject[key]
+        }
+    }
+
+    console.log(queryObject)
+    // get favoritePets of User
+    const favoritePets = userID ? await FavoritePet.find({ user: userID }) : []
 
     const favoritePetIDs = new Set()
     for (const favoritePet of favoritePets) {
         favoritePetIDs.add(favoritePet.pet.toString())
     }
 
-    const pets = await Pet.find({}).populate(populateWithData)
+    // get pets
+    const pets = await Pet.find(queryObject).populate(populateWithData)
 
     const petsWithFavorite = pets.map((pet) => {
         return {

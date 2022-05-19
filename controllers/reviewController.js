@@ -35,21 +35,28 @@ const populateReviewsToUsers = async (users) => {
 
 
 const getAllReviewsToUser = async (req, res) => {
-   const { username } = req.params
+    const { username } = req.params
+    const user = await User.findOne({ username })
+    
+    const [{ reviews, averageRating, numOfReviews, test }] = await Review.aggregate([
+        {
+            $match: {
+                toUser: user._id,
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                reviews: { $push: '$$ROOT' },
+                averageRating: { $avg: '$rating' },
+                test: {$sum : '$rating'},
+                numOfReviews: { $count: {} },
+            },
+        },
+    ]);
 
-   const user = await User.findOne({ username })
-   const reviews = await Review.find({ toUser: user.id })
-   const numOfReviews = await Review.find({ toUser: user.id }).count()
-
-   res.status(StatusCodes.OK).json({ reviews, numOfReviews })  
+    res.status(StatusCodes.OK).json({ reviews, numOfReviews, averageRating, test }) 
    
-
-   // for single user
- // res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers([user])[0] })
-
-   // mulitple users
-/*  const users = await User.find({})
- res.status(StatusCodes.OK).json({ reviews: await populateReviewsToUsers(users)}) */
 }
 
 const getAllReviewsFromUser = async (req, res) => {
@@ -60,6 +67,16 @@ const getAllReviewsFromUser = async (req, res) => {
     const skip = (page- 1) * limit
 
     const reviews = await Review.find({ fromUser: userID }).skip(skip).limit(limit)
+
+    // Note: this query makes sense if you want to know the total number of reviews,
+    // even when the pagination limits it. If you want to know how many reviews are in the `reviews` array
+    // or don't use pagination, you can just do:
+    // const numOfReviews = reviews.length;
+
+    // Also a side note: if you don't need to filter the documents, i. e. you want to do
+    // `Review.count({})` or `Review.find({}).count()`, it is better to use:
+    // const numOfReviews = await Review.estimatedDocumentCount();
+    // Here it is not the case, because you have a filter query
     const numOfReviews = await Review.find({ fromUser: userID }).count()
 
     if(!reviews?.length) {
