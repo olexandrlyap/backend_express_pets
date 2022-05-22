@@ -47,7 +47,22 @@ const getAllPets = async (req, res) => {
         }
     }
 
-    console.log(queryObject)
+    // SEARCH 
+
+   /*  const agg = [
+        {
+          '$search': {
+            'text': {
+              'query': 'lorem', // text entered by user
+              'path': 'description' // mainly search description, name, notes
+            }
+          }
+        }, {
+          '$limit': 20 // first 20 most relevant
+        }
+      ]; */
+
+
     // get favoritePets of User
     const favoritePets = userID ? await FavoritePet.find({ user: userID }) : []
 
@@ -102,6 +117,7 @@ const createPet = async (req, res) => {
     // check if breed is allowed
     checkAllowedBreeds({ type, breed, catBreeds, dogBreeds, otherBreeds })
 
+
     // check main_image size
     if (mainImage[0].size >= process.env.PET_MAIN_IMAGE_MAX_SIZE) {
         throw new CustomError.BadRequestError('Allowed capacity for main_image is 5mb')
@@ -116,6 +132,9 @@ const createPet = async (req, res) => {
         bufferToDataURL(mainImage[0].buffer, mainImage[0].mimetype),
         { folder: 'pets' }
     )
+
+    console.log('main', uploadedMainImage)
+
     
     // validate images total size
     if(images) {
@@ -145,6 +164,7 @@ const createPet = async (req, res) => {
     }
 
     const uploadedImages = images ? await uploadImages() : []
+    console.log('images', uploadImages)
 
 
     const limitedTags = tags ? removeDuplicateTags(tags.split(',').slice(0, 5)) : []
@@ -168,6 +188,8 @@ const createPet = async (req, res) => {
         user: ObjectId(userID),
         tags: limitedTags,
     })
+
+    console.log('pet', pet)
 
 
     res.status(StatusCodes.CREATED).json({ pet })
