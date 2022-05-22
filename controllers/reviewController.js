@@ -38,45 +38,39 @@ const getAllReviewsToUser = async (req, res) => {
     const { username } = req.params
     const user = await User.findOne({ username })
     
-    const [{ reviews, averageRating, numOfReviews, test }] = await Review.aggregate([
-        {
-            $match: {
-                toUser: user._id,
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                reviews: { $push: '$$ROOT' },
-                averageRating: { $avg: '$rating' },
-                test: {$sum : '$rating'},
-                numOfReviews: { $count: {} },
+    const [[{ averageRating, numOfReviews }], reviews] = await Promise.all([
+        Review.aggregate([
+            {
+                $match: {
+                    toUser: user._id,
+                },
             },
-        },
+            {
+                $group: {
+                    _id: null,
+                    reviews: { $push: '$$ROOT' },
+                    averageRating: { $avg: '$rating' },
+                    numOfReviews: { $count: {} },
+                },
+            },
+        ]),
+
+        // It is possible to do skip & limit in an aggregation: there are $skip and $limit stages.
+        // But we can't do it before $group because it would make averageRating and numOfReviews inaccurate.
+        // And we can't do it after $group, because $group emits just one document, so skip & limit don't make sense to do on it.
+        // It is possible to unwrap $group output back into many documents ($unwind stage), I can show it to you if you want.
+        Review.find({ toUser: user._id }).skip(skip).limit(limit),
     ]);
 
-    res.status(StatusCodes.OK).json({ reviews, numOfReviews, averageRating, test }) 
+    res.status(StatusCodes.OK).json({ reviews, numOfReviews, averageRating }) 
    
 }
 
 const getAllReviewsFromUser = async (req, res) => {
     const userID = req.user.userId
-
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-    const skip = (page- 1) * limit
+    const { skip = 0, limit = 10 } = req.query
 
     const reviews = await Review.find({ fromUser: userID }).skip(skip).limit(limit)
-
-    // Note: this query makes sense if you want to know the total number of reviews,
-    // even when the pagination limits it. If you want to know how many reviews are in the `reviews` array
-    // or don't use pagination, you can just do:
-    // const numOfReviews = reviews.length;
-
-    // Also a side note: if you don't need to filter the documents, i. e. you want to do
-    // `Review.count({})` or `Review.find({}).count()`, it is better to use:
-    // const numOfReviews = await Review.estimatedDocumentCount();
-    // Here it is not the case, because you have a filter query
     const numOfReviews = await Review.find({ fromUser: userID }).count()
 
     if(!reviews?.length) {
