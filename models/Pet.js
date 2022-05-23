@@ -119,6 +119,8 @@ petSchema.pre('save', function preSavePet(next) {
     if (this.description) {
         this.description = sanitizeHtml(this.description);
     }
+
+    next()
 });
 
 module.exports = mongoose.model('Pet', petSchema)
