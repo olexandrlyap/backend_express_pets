@@ -15,64 +15,39 @@ const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
-    const { type, breed, contract, now_available, featured, age, sort } = req.query
+    const { type, breed, contract, now_available, featured, age, skip, limit } = req.query
 
-    // add filter, sorting, populating
-    const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
     const queryObject = {}
-
-    if(type) {
-        queryObject.type = allowedTypes.includes(type) ? type : ''
+    if(type && allowedTypes.includes(type)) {
+        queryObject.type = type
     }
-    if(breed) {
-        queryObject.breed = checkAllowedBreedsQuery(breed) ? breed : ''
+    if(breed && checkAllowedBreeds(breed)) {
+        queryObject.breed = breed
     }
-    if(contract) {
-        queryObject.contract = allowedContracts.includes(contract) ? contract : ''
+    if(contract && allowedContracts.includes(contract)) {
+        queryObject.contract = contract
     }
-    if(now_available === 'true' || 'false') {
+    if(now_available === 'true' || now_available === 'false') {
         queryObject.now_available = now_available
     }
-    if(featured === 'true' || 'false') {
+    if(featured === 'true' || now_available === 'false') {
         queryObject.featured = featured
     }
-    if(age) {
-        queryObject.age = allowedAge.includes(age) ? age : ''
+    if(age && allowedAge.includes(age)) {
+        queryObject.age = age
     }
-
-    // delete empty objects using for in || try reduce and don't mutate?
-    for (const key in queryObject) {
-        if( queryObject[key] === '') {
-            delete queryObject[key]
-        }
-    }
-
-    // SEARCH 
-
-   /*  const agg = [
-        {
-          '$search': {
-            'text': {
-              'query': 'lorem', // text entered by user
-              'path': 'description' // mainly search description, name, notes
-            }
-          }
-        }, {
-          '$limit': 20 // first 20 most relevant
-        }
-      ]; */
-
 
     // get favoritePets of User
     const favoritePets = userID ? await FavoritePet.find({ user: userID }) : []
-
     const favoritePetIDs = new Set()
     for (const favoritePet of favoritePets) {
         favoritePetIDs.add(favoritePet.pet.toString())
     }
 
+    const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
+
     // get pets
-    const pets = await Pet.find(queryObject).populate(populateWithData)
+    const pets = await Pet.find(queryObject).skip(skip).limit(limit).populate(populateWithData)
 
 
     const petsWithFavorite = pets.map((pet) => {
@@ -164,7 +139,7 @@ const createPet = async (req, res) => {
     }
 
     const uploadedImages = images ? await uploadImages() : []
-    console.log('images', uploadImages)
+    console.log('images', uploadedImages)
 
 
     const limitedTags = tags ? removeDuplicateTags(tags.split(',').slice(0, 5)) : []
