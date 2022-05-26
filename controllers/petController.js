@@ -15,7 +15,7 @@ const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
-    const { type, breed, contract, now_available, featured, age, skip, limit } = req.query
+    const { type, breed, contract, now_available, featured, age, search, skip, limit } = req.query
 
     const queryObject = {}
     if(type && allowedTypes.includes(type)) {
@@ -44,16 +44,49 @@ const getAllPets = async (req, res) => {
         favoritePetIDs.add(favoritePet.pet.toString())
     }
 
-    const populateWithData = [{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]
-
     // get pets
-    const pets = await Pet.find(queryObject).skip(skip).limit(limit).populate(populateWithData)
+    const pets = await Pet.aggregate([
+        ...(search ? [{
+            $search: {
+                index: 'default',
+                phrase: {
+                    query: search,
+                    path: ['name', 'description', 'notes'],
+                    // slop: 1,
+                },
+            },
+        }] : []),
+        { $match: queryObject },
+        { $skip: skip ?? 0 },
+        { $limit: Number(limit ?? 10) },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user',
+                foreignField: '_id',
+                as: 'user',
+            },
+        },
+        {
+            $lookup: {
+                from: 'tags',
+                localField: 'tags',
+                foreignField: '_id',
+                as: 'tags',
+            },
+        },
+    ]);
 
 
     const petsWithFavorite = pets.map((pet) => {
+        const [{ _id, username }] = pet.user;
+        const tags = pet.tags.map(({ _id, slug, name }) => ({ _id, slug, name }));
+
         return {
-            ...pet.toJSON(),
-            isFavorite: favoritePetIDs.has(pet.id.toString())
+            ...pet,
+            user: { _id, username },
+            tags,
+            isFavorite: favoritePetIDs.has(pet._id.toString())
         }
     })
 
@@ -271,7 +304,7 @@ const updatePet = async (req, res) => {
         }, 
         images: uploadedImages&&uploadedImages,
         
-        tags: tags && removeDuplicateTags(tags.slice(0, 5)),
+        tags: tags && removeDuplicateTags(tags.split(',').slice(0, 5)),
     }, {
         new: true,
         populate: {
