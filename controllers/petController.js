@@ -60,12 +60,6 @@ const getAllPets = async (req, res) => {
     res.status(StatusCodes.OK).json({ pets: petsWithFavorite })
 }
 
-const getRecommendedPets = async (req, res) => {
-    // for Main page and advertisments 
-    const pets = await Pet.find({}).populate([{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]).limit(5)
-    res.status(StatusCodes.OK).json({pets})
-}
-
 const removeDuplicateTags = (tags) => {
     const addedTags = new Set();
     const dedupedTags = [];
@@ -218,7 +212,7 @@ const updatePet = async (req, res) => {
 
 
     // validate MainImage 
-    if (mainImage&&mainImage[0].size >= process.env.PET_MAIN_IMAGE_MAX_SIZE) {
+    if (mainImage && mainImage[0].size >= process.env.PET_MAIN_IMAGE_MAX_SIZE) {
         throw new CustomError.BadRequestError('Allowed capacity for main_image is 5mb')
     }
     let uploadedMainImage
@@ -331,5 +325,4 @@ module.exports = {
     getSinglePet,
     updatePet,
     deletePet,
-    getRecommendedPets,
 }
