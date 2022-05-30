@@ -21,6 +21,10 @@ const tagSchema = new Schema({
         index: true,
         slug_padding_size: 2
     },
+    isSelected: {
+        type: Boolean,
+        default: false
+    }
 })
 
 module.exports = mongoose.model('Tag', tagSchema)

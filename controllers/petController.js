@@ -62,7 +62,7 @@ const getAllPets = async (req, res) => {
 
 const getRecommendedPets = async (req, res) => {
     // for Main page and advertisments 
-    const pets = await Pet.find({}).populate([{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]).limit(5)
+    const pets = await Pet.find({}).populate([{ path: 'tags', select: 'name slug _id'}, {path: 'user', select: '_id username'}]).limit(4)
     res.status(StatusCodes.OK).json({pets})
 }
 
