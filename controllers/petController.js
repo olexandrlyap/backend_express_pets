@@ -15,7 +15,7 @@ const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
-    const { type, breed, contract, now_available, featured, age, skip, limit } = req.query
+    const { type, breed, contract, now_available, featured, age, skip, location, limit } = req.query
 
     const queryObject = {}
     if(type && allowedTypes.includes(type)) {
@@ -35,6 +35,19 @@ const getAllPets = async (req, res) => {
     }
     if(age && allowedAge.includes(age)) {
         queryObject.age = age
+    }
+    if (location) {
+        const [lat, lng] = location.split(',');
+        if (Number.isFinite(Number(lat)) && Number.isFinite(Number(lng))) {
+            queryObject.location = {
+                $near: {
+                    $geometry: {
+                        type: 'Point',
+                        coordinates: [lat, lng],
+                    },
+                },
+            };
+        }
     }
 
     // get favoritePets of User
@@ -79,7 +92,7 @@ const removeDuplicateTags = (tags) => {
 }
 
 const createPet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes} = req.body
+    const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes, location } = req.body
     const userID = req.user.userId
     const { mainImage, images } = req.files
 
@@ -162,6 +175,10 @@ const createPet = async (req, res) => {
         images: uploadedImages,
         user: ObjectId(userID),
         tags: limitedTags,
+        location: location && {
+            type: 'Point',
+            coordinates: location.split(','),
+        }
     })
 
     console.log('pet', pet)
