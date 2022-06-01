@@ -89,10 +89,13 @@ const petSchema = new Schema({
         ref: 'User',
         required: true,
     },
-
+    location: {
+        type: new Schema({ type: String, coordinates: [Number] }),
+        required: false,
+    },
 },  { timestamps: true })
 
-
+petSchema.index({ location: '2dsphere' });
 
 const disallowHtmlOptions = {
     allowedTags: [],
