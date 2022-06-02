@@ -5,9 +5,8 @@ const { imageConfig } = require('../controllers/petUploadImagesController')
 
 const {
     authenticateUser,
-    authorizePermissions,
     publicRouteAuthenticateUser,
-  } = require('../middleware/authentication');
+} = require('../middleware/authentication');
 
 const {
     getAllPets,
@@ -15,7 +14,6 @@ const {
     getSinglePet,
     updatePet,
     deletePet,
-    getRecommendedPets
 } = require('../controllers/petController')
 
 router
@@ -32,9 +30,5 @@ router
     .patch([authenticateUser, imageConfig], updatePet)
     .delete([authenticateUser], deletePet)
 //other routes add authorize permission - add policy...
-
-router
-    .route('/recommended/main')
-    .get(getRecommendedPets)
 
 module.exports = router
