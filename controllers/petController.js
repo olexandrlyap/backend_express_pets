@@ -15,9 +15,7 @@ const { catBreeds, dogBreeds, otherBreeds, allowedTypes, checkAllowedBreedsQuery
 
 const getAllPets = async (req, res) => {
     const userID = req.user?.userId ? req.user.userId  : null
-
-    const { type, breed, contract, now_available, featured, age, skip, location, limit } = req.query
-
+    const { type, breed, contract, now_available, featured, age, location, search, skip, limit } = req.query
 
     const queryObject = {}
     if(type && allowedTypes.includes(type)) {
