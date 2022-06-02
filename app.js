@@ -23,6 +23,7 @@ const tagRouter = require('./routes/tagRoutes')
 const profileRouter = require('./routes/profileRoutes')
 const favoritePetRouter = require('./routes/favoritePetRoutes')
 const reviewRouter = require('./routes/reviewRoutes')
+const petCategoriesRouter = require('./routes/petCategoriesRoutes')
 
 
 // middleware
@@ -32,11 +33,10 @@ const errorHandlerMiddleware = require('./middleware/error-handler');
 
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3000/zvirata'], 
   credentials: true,
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
-
 
 app.set('trust proxy', 1);
 app.use(
@@ -61,7 +61,7 @@ app.use('/api/v1/tags', tagRouter)
 app.use('/api/v1/profiles', profileRouter)
 app.use('/api/v1/favorite-pets', favoritePetRouter)
 app.use('/api/v1/reviews', reviewRouter)
-
+app.use('/api/v1/pet-categories', petCategoriesRouter)
 
 
 app.use(notFoundMiddleware);
