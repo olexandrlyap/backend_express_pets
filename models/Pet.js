@@ -71,6 +71,11 @@ const petSchema = new Schema({
         required: [true, 'Please provide product price'],
         default: 0,
     },
+    isAgreement: {
+        type: Boolean,
+        required: true,
+        default: false,
+    },
     fees: {
         type: Number,
         required: [false, 'Please provide fees'],

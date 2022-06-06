@@ -122,7 +122,21 @@ const removeDuplicateTags = (tags) => {
 }
 
 const createPet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags, now_available, notes, location } = req.body
+    const {
+      type,
+      breed,
+      contract,
+      name,
+      description,
+      age,
+      price,
+      fees,
+      tags,
+      now_available,
+      notes,
+      location,
+      isAgreement,
+    } = req.body;
     const userID = req.user.userId
     const { mainImage, images } = req.files
 
@@ -208,7 +222,8 @@ const createPet = async (req, res) => {
         location: location && {
             type: 'Point',
             coordinates: location.split(','),
-        }
+        },
+        isAgreement,
     })
 
     console.log('pet', pet)
@@ -248,7 +263,7 @@ const getSinglePet = async (req, res) => {
 }
 
 const updatePet = async (req, res) => {
-    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available } = req.body
+    const { type, breed, contract, name, description, age, price, fees, tags, notes, now_available, isAgreement } = req.body
     const { id } = req.params
     const userID = req.user.userId
     const { mainImage, images } = req.files
@@ -323,7 +338,7 @@ const updatePet = async (req, res) => {
             url: uploadedMainImage&&uploadedMainImage.url ,
         }, 
         images: uploadedImages&&uploadedImages,
-        
+        isAgreement,
         tags: tags && removeDuplicateTags(tags.split(',').slice(0, 5)),
     }, {
         new: true,
